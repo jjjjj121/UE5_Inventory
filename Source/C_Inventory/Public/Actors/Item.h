@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "C_Inventory/Public/Structs.h"
 #include "C_Inventory/Public/InteractInterface.h"
 #include "Item.generated.h"
 
@@ -25,8 +26,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Item")
 	class UStaticMeshComponent* ItemMesh;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Item")
+	FItemData ItemData;
 
 public:
-	virtual void Interact() override;
+	virtual void Interact(class AC_InventoryCharacter* Character) override;
+
+public:
+	/*ItemData를 받아오기 위한 함수*/
+	FItemData GetItemData() const { return ItemData; }
+
 
 };

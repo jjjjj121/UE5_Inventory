@@ -56,7 +56,6 @@ protected:
 
 	void Interact();
 			
-
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -69,5 +68,11 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+public:
+	/*아이템 - 인벤토리에 추가 함수*/
+	/*BlueprintImplementableEvent 키워드는 특수상황에 대한 사용자이벤트를 만들기 위한 키워드로 헤더에만 선언하고 본문은 블루프린트에서 작성한다. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "InventorySystem")
+	void AddItemToInventory(FItemData ItemData);
 };
 

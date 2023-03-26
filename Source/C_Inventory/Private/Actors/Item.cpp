@@ -2,6 +2,8 @@
 
 
 #include "Actors/Item.h"
+#include "C_Inventory/C_InventoryCharacter.h"
+
 
 // Sets default values
 AItem::AItem()
@@ -23,10 +25,13 @@ void AItem::BeginPlay()
 	
 }
 
-void AItem::Interact()
+void AItem::Interact(class AC_InventoryCharacter* Character)
 {
+	/*상호 작용시 캐릭터에게 데이터 넘겨주고 파괴*/
+	if (Character){
+		Character->AddItemToInventory(ItemData);
+	}
 	Destroy();
-
 }
 
 

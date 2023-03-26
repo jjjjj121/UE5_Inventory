@@ -125,7 +125,7 @@ void AC_InventoryCharacter::Interact()
 		/*HitResult 가 True 면 엑터이름 출력*/
 		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
 			
-			Interface->Interact();
+			Interface->Interact(this);
 			//UE_LOG(LogTemp, Warning, TEXT("Hit Actor : %s"), *Actor->GetName());
 		}
 	}
