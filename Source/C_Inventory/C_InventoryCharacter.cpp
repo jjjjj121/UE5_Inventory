@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "C_InventoryCharacter.h"
+#include "C_Inventory/Public/Actors/Item.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -9,7 +10,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include "DrawDebugHelpers.h"
+#include "InputMappingContext.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AC_InventoryCharacter
@@ -49,6 +51,18 @@ AC_InventoryCharacter::AC_InventoryCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	/*맵핑 설정 추가?*/
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext>DEFAULT_CONTEXT
+	(TEXT("/Game/ThirdPerson/Input/IMC_Default.IMC_Default"));
+	if (DEFAULT_CONTEXT.Succeeded())
+		DefaultMappingContext = DEFAULT_CONTEXT.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction>IA_Interact
+	(TEXT("/Game/ThirdPerson/Input/Actions/IA_Interact.IA_Interact"));
+	if (IA_Interact.Succeeded())
+		InteractAction = IA_Interact.Object;
+
 }
 
 void AC_InventoryCharacter::BeginPlay()
@@ -78,6 +92,9 @@ void AC_InventoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
+		/*Interact*/
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AC_InventoryCharacter::Interact);
+
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AC_InventoryCharacter::Move);
 
@@ -87,6 +104,36 @@ void AC_InventoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	}
 
 }
+
+void AC_InventoryCharacter::Interact()
+{
+	//if (Value.Get<bool>()) {
+	//	UE_LOG(LogTemp, Warning, TEXT("Interact On"));
+	//}
+
+	FVector Start = FollowCamera->GetComponentLocation();
+	FVector End = Start + FollowCamera->GetForwardVector() * 1000.0f;
+	FHitResult HitResult;
+
+	/*콜리전 세팅*/
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	/*라인트레이스 세팅*/
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		/*HitResult 가 True 면 엑터이름 출력*/
+		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
+			
+			Interface->Interact();
+			//UE_LOG(LogTemp, Warning, TEXT("Hit Actor : %s"), *Actor->GetName());
+		}
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+
+}
+
 
 void AC_InventoryCharacter::Move(const FInputActionValue& Value)
 {
@@ -123,6 +170,9 @@ void AC_InventoryCharacter::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
+
+
+
 
 
 
