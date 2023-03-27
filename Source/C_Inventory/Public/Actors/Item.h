@@ -32,9 +32,12 @@ protected:
 public:
 	virtual void Interact(class AC_InventoryCharacter* Character) override;
 
+	virtual void Use(AC_InventoryCharacter* Character) override;
+
 public:
 	/*ItemData를 받아오기 위한 함수*/
 	FItemData GetItemData() const { return ItemData; }
 
+	//FString TestFunction() const { return FString("OUR TEST STRING"); }
 
 };

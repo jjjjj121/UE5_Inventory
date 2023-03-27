@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "DrawDebugHelpers.h"
 #include "InputMappingContext.h"
+#include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AC_InventoryCharacter
@@ -80,6 +81,41 @@ void AC_InventoryCharacter::BeginPlay()
 	}
 }
 
+void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	/*아래 매크로 사용하기 위해서 Net/UnrealNetwork.h 포함 필요*/
+	/*아래 매크로를 통해 replication의 세밀한 제어를 위한 부차적인 조건을 추가시킬 수 있다.*/
+	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, InventoryItems, COND_OwnerOnly);
+
+}
+
+void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
+{
+	if (HasAuthority()) {
+
+		InventoryItems.Add(ItemData);
+	}
+	
+}
+
+void AC_InventoryCharacter::AddHealth(float Value)
+{
+	Health += Value;
+	UpdateStats(Hunger, Health);
+	UE_LOG(LogTemp, Warning, TEXT("ADDED HEALTH : %f"), Health);
+
+}
+
+void AC_InventoryCharacter::RemoveHunger(float Value)
+{
+	Hunger -= Value;
+	UpdateStats(Hunger, Health);
+	UE_LOG(LogTemp, Warning, TEXT("REMOVED HEALTH : %f"), Hunger);
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -107,12 +143,27 @@ void AC_InventoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 void AC_InventoryCharacter::Interact()
 {
-	//if (Value.Get<bool>()) {
-	//	UE_LOG(LogTemp, Warning, TEXT("Interact On"));
-	//}
 
 	FVector Start = FollowCamera->GetComponentLocation();
-	FVector End = Start + FollowCamera->GetForwardVector() * 1000.0f;
+	FVector End = Start + FollowCamera->GetForwardVector() * 500.0f;
+	
+	/*서버일 경우 기존 interact 함수 사용*/
+	if (HasAuthority()) {
+		Interact(Start, End);
+	}
+	/*클라일 경우 Server_Interact를 통해 서버에서 interact 실행*/
+	/*왜 ? -> 서버에서 실행되어야 replicate 되어서 서버와 클라 모두 동기화 되기때문*/
+	else {
+		Server_Interact(Start, End);
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+
+}
+
+void AC_InventoryCharacter::Interact(FVector Start, FVector End)
+{
+
 	FHitResult HitResult;
 
 	/*콜리전 세팅*/
@@ -124,13 +175,50 @@ void AC_InventoryCharacter::Interact()
 	{
 		/*HitResult 가 True 면 엑터이름 출력*/
 		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
-			
+
 			Interface->Interact(this);
 			//UE_LOG(LogTemp, Warning, TEXT("Hit Actor : %s"), *Actor->GetName());
 		}
 	}
+}
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+bool AC_InventoryCharacter::Server_Interact_Validate(FVector Start, FVector End)
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Server_Interact_Implementation(FVector Start, FVector End){
+
+	Interact(Start, End);
+
+}
+
+
+
+void AC_InventoryCharacter::UpdateStats_Implementation(float NewHunger, float NewHealth)
+{
+}
+
+void AC_InventoryCharacter::OnRep_InventoryItems()
+{
+	/*Inventory에 Item이 존재할 경우*/
+	if (InventoryItems.Num()) {
+		
+		/*뒤에 추가되어야 하기 떄문에 Num() -1로 마지막 인덱스 가리킴*/
+		AddItemToInventory(InventoryItems[InventoryItems.Num() - 1]);
+	}
+
+
+
+}
+
+void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass)
+{
+	if (ItemSubclass) {
+		if (AItem* CDOItem = ItemSubclass.GetDefaultObject()) {
+			CDOItem->Use(this);
+		}
+	}
 
 }
 

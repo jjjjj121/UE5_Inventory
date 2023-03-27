@@ -15,6 +15,9 @@ AItem::AItem()
 	RootComponent = ItemMesh;
 
 
+	bReplicates = true;
+
+	ItemData.ItemClass = StaticClass();
 
 }
 
@@ -28,10 +31,19 @@ void AItem::BeginPlay()
 void AItem::Interact(class AC_InventoryCharacter* Character)
 {
 	/*상호 작용시 캐릭터에게 데이터 넘겨주고 파괴*/
-	if (Character){
-		Character->AddItemToInventory(ItemData);
+	/*HasAuthority -> 서버에서만 실행*/
+	if (HasAuthority() && Character){
+		Character->AddInventoryItem(ItemData);
+		Destroy();
 	}
-	Destroy();
+	
+}
+
+void AItem::Use(AC_InventoryCharacter* Character)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Using Item : %s"), *GetName());
+
 }
 
 

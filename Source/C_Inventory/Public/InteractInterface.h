@@ -16,15 +16,18 @@ class UInteractInterface : public UInterface
 /**
  * 
  */
+
+class AC_InventoryCharacter;
+
 class C_INVENTORY_API IInteractInterface
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+	/*자손(Item)에서 오버라이드 해서 사용하기 위함.*/
+	virtual void Interact(AC_InventoryCharacter* Character) = 0;
 
-	virtual void Interact(class AC_InventoryCharacter* Character) = 0;
-
-
+	virtual void Use(AC_InventoryCharacter* Character) {}
 
 };
