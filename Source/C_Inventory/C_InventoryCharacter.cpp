@@ -88,14 +88,32 @@ void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	/*아래 매크로 사용하기 위해서 Net/UnrealNetwork.h 포함 필요*/
 	/*아래 매크로를 통해 replication의 세밀한 제어를 위한 부차적인 조건을 추가시킬 수 있다.*/
 	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, InventoryItems, COND_OwnerOnly);
+	DOREPLIFETIME(AC_InventoryCharacter, Health);
+	DOREPLIFETIME(AC_InventoryCharacter, Hunger);
 
 }
 
 void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 {
 	if (HasAuthority()) {
+		
+		bool bIsNewItem = true;
+		for (FItemData& Item : InventoryItems) {
+			if (Item.ItemClass == ItemData.ItemClass) {
+				++Item.StackCount;
+				bIsNewItem = false;
+				break;
+			}
+		}
 
-		InventoryItems.Add(ItemData);
+		/*인벤토리에 없는 아이템일 경우 새로 추가*/
+		if (bIsNewItem) {
+			InventoryItems.Add(ItemData);
+		}
+		/*로컬일 경우*/
+		if (IsLocallyControlled()) {
+			OnRep_InventoryItems();
+		}
 	}
 	
 }
@@ -103,7 +121,9 @@ void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 void AC_InventoryCharacter::AddHealth(float Value)
 {
 	Health += Value;
-	UpdateStats(Hunger, Health);
+	if (IsLocallyControlled()) {
+		UpdateStats(Hunger, Health);
+	}
 	UE_LOG(LogTemp, Warning, TEXT("ADDED HEALTH : %f"), Health);
 
 }
@@ -111,7 +131,10 @@ void AC_InventoryCharacter::AddHealth(float Value)
 void AC_InventoryCharacter::RemoveHunger(float Value)
 {
 	Hunger -= Value;
-	UpdateStats(Hunger, Health);
+	if (IsLocallyControlled()) {
+		UpdateStats(Hunger, Health);
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("REMOVED HEALTH : %f"), Hunger);
 
 }
@@ -193,10 +216,16 @@ void AC_InventoryCharacter::Server_Interact_Implementation(FVector Start, FVecto
 
 }
 
-
-
 void AC_InventoryCharacter::UpdateStats_Implementation(float NewHunger, float NewHealth)
 {
+}
+
+void AC_InventoryCharacter::OnRep_Stats()
+{
+	if (IsLocallyControlled()) {
+		UpdateStats(Hunger, Health);
+	}
+
 }
 
 void AC_InventoryCharacter::OnRep_InventoryItems()
@@ -204,23 +233,71 @@ void AC_InventoryCharacter::OnRep_InventoryItems()
 	/*Inventory에 Item이 존재할 경우*/
 	if (InventoryItems.Num()) {
 		
-		/*뒤에 추가되어야 하기 떄문에 Num() -1로 마지막 인덱스 가리킴*/
-		AddItemToInventory(InventoryItems[InventoryItems.Num() - 1]);
+		/*최근 아이템이 추가되어야 하기 떄문에 Num() -1로 마지막 인덱스 가리킴*/
+		AddItemAndUpdateInventory(InventoryItems[InventoryItems.Num() - 1], InventoryItems);
 	}
-
-
 
 }
 
 void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass)
 {
 	if (ItemSubclass) {
-		if (AItem* CDOItem = ItemSubclass.GetDefaultObject()) {
-			CDOItem->Use(this);
+		if (HasAuthority()) {
+			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
+				Item->Use(this);
+			}
+			for (FItemData& Item : InventoryItems) {
+				if (Item.ItemClass == ItemSubclass) {
+					--Item.StackCount;
+					break;
+				}
+			}
+			if (IsLocallyControlled()) {
+				OnRep_InventoryItems();
+			}
+
+		}
+		else {
+
+			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
+				Item->Use(this);
+			}
+			Server_UseItem(ItemSubclass);
 		}
 	}
 
 }
+
+bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubclass)
+{
+	/*아래 주석의 경우는 버그를 이용해 아이템을 사용하려는 경우 서버에서 킥을 하기 위함*/
+	///*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
+	//for (FItemData& Item : InventoryItems) {
+	//	if (Item.ItemClass == ItemSubclass) {
+
+	//		return true;
+	//	}
+	//}
+	///*인벤토리에 존재하지 않은 아이템을 사용하려고 한 경우*/
+	//return false;
+
+	return true;
+}
+
+void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass)
+{
+	/*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
+	for (FItemData& Item : InventoryItems) {
+		if (Item.ItemClass == ItemSubclass) {
+			UseItem(ItemSubclass);
+			return;
+		}
+	}
+	
+
+}
+
+
 
 
 void AC_InventoryCharacter::Move(const FInputActionValue& Value)

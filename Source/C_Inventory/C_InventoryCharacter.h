@@ -58,7 +58,7 @@ protected:
 	void Interact();
 	void Interact(FVector Start, FVector End);
 
-
+	/*Interact RPC함수 : client -> server */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_Interact(FVector Start, FVector End);
 	
@@ -71,11 +71,15 @@ protected:
 
 protected:
 
-	UPROPERTY(BlueprintReadWrite, Category = "Property")
+	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
 	float Health;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Property")
+	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
 	float Hunger;
+	
+	UFUNCTION()
+	void OnRep_Stats();
+
 
 	/*Notify replicate를 실행하는 변수 선언*/
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadWrite, Category = "Property")
@@ -87,12 +91,16 @@ protected:
 	/*아이템 - 인벤토리에 추가 함수*/
 	/*BlueprintImplementableEvent 키워드는 특수상황에 대한 사용자이벤트를 만들기 위한 키워드로 헤더에만 선언하고 본문은 블루프린트에서 작성한다. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "InventorySystem")
-	void AddItemToInventory(FItemData ItemData);
-
+	void AddItemAndUpdateInventory(FItemData ItemData, const TArray<FItemData>& NewInventoryItems = TArray<FItemData>());
 
 	/*아이템 사용 함수 -> 인벤토리 아이콘 클릭 시 호출*/
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(TSubclassOf<AItem> ItemSubclass);
+
+	/*UseItem RPC함수 : client -> server */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UseItem(TSubclassOf<AItem> ItemSubclass);
+
 			
 protected:
 	// APawn interface

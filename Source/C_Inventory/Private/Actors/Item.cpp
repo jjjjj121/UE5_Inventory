@@ -41,9 +41,6 @@ void AItem::Interact(class AC_InventoryCharacter* Character)
 
 void AItem::Use(AC_InventoryCharacter* Character)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Using Item : %s"), *GetName());
-
 }
 
 

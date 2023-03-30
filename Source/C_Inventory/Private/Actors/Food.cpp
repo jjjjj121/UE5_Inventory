@@ -15,4 +15,5 @@ void AFood::Use(AC_InventoryCharacter* Character)
 	if (Character) {
 		Character->RemoveHunger(RemoveFoodValue);
 	}
+	
 }
