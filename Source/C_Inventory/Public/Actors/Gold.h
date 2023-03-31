@@ -4,36 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Actors/Item.h"
-#include "Medpack.generated.h"
-
-
-
-class AC_InventoryCharacter;
+#include "Gold.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class C_INVENTORY_API AMedpack : public AItem
+class C_INVENTORY_API AGold : public AItem
 {
 	GENERATED_BODY()
 	
 public:
-	AMedpack();
+	AGold();
 
-
-protected:
-
-	UPROPERTY(EditAnywhere)
-	float HealthValue;
-
-
-
-public:
 	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false) override;
-
-
-
-
-
 };

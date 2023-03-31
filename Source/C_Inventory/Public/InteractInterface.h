@@ -28,6 +28,6 @@ public:
 	/*자손(Item)에서 오버라이드 해서 사용하기 위함.*/
 	virtual void Interact(AC_InventoryCharacter* Character) = 0;
 
-	virtual void Use(AC_InventoryCharacter* Character) {}
+	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false) {}
 
 };

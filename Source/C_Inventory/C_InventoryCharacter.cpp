@@ -2,6 +2,7 @@
 
 #include "C_InventoryCharacter.h"
 #include "C_Inventory/Public/Actors/Item.h"
+#include "C_Inventory/Public/Actors/Gold.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -13,6 +14,7 @@
 #include "DrawDebugHelpers.h"
 #include "InputMappingContext.h"
 #include "Net/UnrealNetwork.h"
+#include "C_Inventory/Public/Actors/ShopKeeper.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AC_InventoryCharacter
@@ -98,13 +100,29 @@ void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 	if (HasAuthority()) {
 		
 		bool bIsNewItem = true;
-		for (FItemData& Item : InventoryItems) {
-			if (Item.ItemClass == ItemData.ItemClass) {
-				++Item.StackCount;
-				bIsNewItem = false;
-				break;
+		/*아이템이 골드일 경우*/
+		if (ItemData.ItemClass == AGold::StaticClass()) {
+			MyGold += ItemData.StackCount;
+			UE_LOG(LogTemp, Warning, TEXT("MyGold : %d"), MyGold);
+			bIsNewItem = false;
+		}
+		/*골드 제외 아이템일 경우*/
+		else {
+			for (FItemData& Item : InventoryItems) {
+				if (Item.ItemClass == ItemData.ItemClass) {
+					if (ItemData.StackCount > 1) {
+						Item.StackCount += ItemData.StackCount;
+					}
+					else {
+						++Item.StackCount;
+					}
+
+					bIsNewItem = false;
+					break;
+				}
 			}
 		}
+
 
 		/*인벤토리에 없는 아이템일 경우 새로 추가*/
 		if (bIsNewItem) {
@@ -177,6 +195,7 @@ void AC_InventoryCharacter::Interact()
 	/*클라일 경우 Server_Interact를 통해 서버에서 interact 실행*/
 	/*왜 ? -> 서버에서 실행되어야 replicate 되어서 서버와 클라 모두 동기화 되기때문*/
 	else {
+		Interact(Start, End);
 		Server_Interact(Start, End);
 	}
 
@@ -196,12 +215,24 @@ void AC_InventoryCharacter::Interact(FVector Start, FVector End)
 	/*라인트레이스 세팅*/
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		/*HitResult 가 True 면 엑터이름 출력*/
+		
+		/*맞은 엑터가 상점*/
+		AShopKeeper* ShopKeeper = Cast<AShopKeeper>(HitResult.GetActor());
+		if (ShopKeeper) {
+			UE_LOG(LogTemp, Warning, TEXT("OPEN"));
+			if (IsLocallyControlled()) {
+				
+				ShopKeeper->Interact(this);
+			}
+			
+			return;
+		}
+		
 		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
 
 			Interface->Interact(this);
-			//UE_LOG(LogTemp, Warning, TEXT("Hit Actor : %s"), *Actor->GetName());
 		}
+		
 	}
 }
 
@@ -236,21 +267,30 @@ void AC_InventoryCharacter::OnRep_InventoryItems()
 		/*최근 아이템이 추가되어야 하기 떄문에 Num() -1로 마지막 인덱스 가리킴*/
 		AddItemAndUpdateInventory(InventoryItems[InventoryItems.Num() - 1], InventoryItems);
 	}
-
+	else {
+		AddItemAndUpdateInventory(FItemData(), InventoryItems);
+	}
 }
 
-void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass)
+void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
 {
 	if (ItemSubclass) {
 		if (HasAuthority()) {
 			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
-				Item->Use(this);
+				Item->Use(this, IsShopItem);
 			}
+			uint8 Index = 0;
 			for (FItemData& Item : InventoryItems) {
 				if (Item.ItemClass == ItemSubclass) {
 					--Item.StackCount;
+					/*아이템을 모두 소모했을 경우*/
+					if (Item.StackCount<= 0) {
+						InventoryItems.RemoveAt(Index);
+
+					}
 					break;
 				}
+				++Index;
 			}
 			if (IsLocallyControlled()) {
 				OnRep_InventoryItems();
@@ -260,15 +300,15 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass)
 		else {
 
 			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
-				Item->Use(this);
+				Item->Use(this, IsShopItem);
 			}
-			Server_UseItem(ItemSubclass);
+			Server_UseItem(ItemSubclass, IsShopItem);
 		}
 	}
 
 }
 
-bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubclass)
+bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
 {
 	/*아래 주석의 경우는 버그를 이용해 아이템을 사용하려는 경우 서버에서 킥을 하기 위함*/
 	///*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
@@ -284,15 +324,24 @@ bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubcl
 	return true;
 }
 
-void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass)
+void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
 {
-	/*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
-	for (FItemData& Item : InventoryItems) {
-		if (Item.ItemClass == ItemSubclass) {
-			UseItem(ItemSubclass);
-			return;
+	if (IsShopItem) {
+		UseItem(ItemSubclass, IsShopItem);
+	}
+	else {
+		/*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
+		for (FItemData& Item : InventoryItems) {
+			if (Item.ItemClass == ItemSubclass) {
+				if (Item.StackCount) {
+					UseItem(ItemSubclass, IsShopItem);
+				}
+
+				return;
+			}
 		}
 	}
+
 	
 
 }

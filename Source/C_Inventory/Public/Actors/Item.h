@@ -26,13 +26,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Item")
 	class UStaticMeshComponent* ItemMesh;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Item")
+	UPROPERTY(EditAnywhere, Category = "Item")
 	FItemData ItemData;
 
 public:
 	virtual void Interact(class AC_InventoryCharacter* Character) override;
 
-	virtual void Use(AC_InventoryCharacter* Character) override;
+	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false) override;
+
+	
 
 public:
 	/*ItemData를 받아오기 위한 함수*/

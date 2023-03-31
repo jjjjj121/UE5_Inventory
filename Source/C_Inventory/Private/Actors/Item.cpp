@@ -39,8 +39,12 @@ void AItem::Interact(class AC_InventoryCharacter* Character)
 	
 }
 
-void AItem::Use(AC_InventoryCharacter* Character)
+void AItem::Use(AC_InventoryCharacter* Character, bool IsInShop)
 {
+	/*Shop 아이템 일 경우 물건을 사는 것이기 때문에 인벤토리에 아이템 추가*/
+	if (IsInShop && Character) {
+		Character->AddInventoryItem(ItemData);
+	}
 }
 
 
