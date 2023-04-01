@@ -10,14 +10,14 @@
 // Sets default values
 AShopKeeper::AShopKeeper()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	ShopKeeperMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
 	RootComponent = ShopKeeperMesh;
 
 	bReplicates = true;
-	
+
 
 }
 
@@ -32,20 +32,22 @@ void AShopKeeper::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 void AShopKeeper::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 void AShopKeeper::OnRep_Items()
 {
 	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
 		if (Character->IsLocallyControlled()) {
-		}Character->UpdateShop(Items);
-		
+			Character->UpdateShop(Items);
+		}
+
 	}
 }
 
 void AShopKeeper::Interact(AC_InventoryCharacter* Character)
 {
+
 	if (Character) {
 
 		Character->OpenShop(Items, this);
@@ -72,6 +74,38 @@ void AShopKeeper::TransfferedItem(TSubclassOf<AItem> ItemSubclass)
 	//for (FItemData& Item : Items) {
 	//	UE_LOG(LogTemp, Warning, TEXT("ITEM STACK : %d"), Item.StackCount);
 	//}
+}
+
+bool AShopKeeper::CanBuyItem(int32 CurGold, TSubclassOf<AItem> ItemSubclass)
+{
+	for (FItemData Item : Items) {
+		if (Item.ItemClass == ItemSubclass) {
+			return Item.ItemCost <= CurGold;
+		}
+	}
+
+	return false;
+}
+
+void AShopKeeper::BuyItem(AC_InventoryCharacter* Character, TSubclassOf<AItem> ItemSubclass)
+{
+
+	uint8 Index = 0;
+	for (FItemData& Item : Items) {
+		if (Item.ItemClass == ItemSubclass) {
+			--Item.StackCount;
+			Character->RemoveGold(Item.ItemCost);
+			/*아이템을 모두 소모했을 경우*/
+			if (Item.StackCount <= 0) {
+				Items.RemoveAt(Index);
+			}
+			break;
+		}
+		++Index;
+	}
+	OnRep_Items();
+
+
 }
 
 

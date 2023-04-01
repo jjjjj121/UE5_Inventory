@@ -77,8 +77,8 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
 	float Hunger;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Property")
-	int MyGold = 0;
+	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadOnly, Category = "Property")
+	int32 MyGold = 0;
 
 	UFUNCTION()
 	void OnRep_Stats();
@@ -127,11 +127,18 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateShop(const TArray<FItemData>& Items);
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetGold();
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveGold(int32 RemoveValue);
+
 public:
 
 	void AddInventoryItem(FItemData ItemData);
 	void AddHealth(float Value);
 	void RemoveHunger(float Value);
+
 
 };
 

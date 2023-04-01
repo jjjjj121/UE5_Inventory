@@ -9,6 +9,8 @@
 #include "Item.h"
 #include "ShopKeeper.generated.h"
 
+class AC_InventoryCharacter;
+
 UCLASS()
 class C_INVENTORY_API AShopKeeper : public AActor, public IInteractInterface
 {
@@ -35,7 +37,12 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void Interact(class AC_InventoryCharacter* Character) override;
+	virtual void Interact(AC_InventoryCharacter* Character) override;
 
 	virtual void TransfferedItem(TSubclassOf<AItem> ItemSubclass);
+
+	bool CanBuyItem(int32 CurGold, TSubclassOf<AItem> ItemSubclass);
+
+	virtual void BuyItem(AC_InventoryCharacter* Character, TSubclassOf<AItem> ItemSubclass);
+
 };

@@ -90,9 +90,27 @@ void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	/*아래 매크로 사용하기 위해서 Net/UnrealNetwork.h 포함 필요*/
 	/*아래 매크로를 통해 replication의 세밀한 제어를 위한 부차적인 조건을 추가시킬 수 있다.*/
 	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, InventoryItems, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, MyGold, COND_OwnerOnly);
 	DOREPLIFETIME(AC_InventoryCharacter, Health);
 	DOREPLIFETIME(AC_InventoryCharacter, Hunger);
 
+}
+
+
+int32 AC_InventoryCharacter::GetGold()
+{
+	return MyGold;
+}
+
+void AC_InventoryCharacter::RemoveGold(int32 RemoveValue)
+{
+	MyGold -= RemoveValue;
+	if (IsLocallyControlled()) {
+		OnRep_InventoryItems();
+		UE_LOG(LogTemp, Warning, TEXT("MyGold : %d"), MyGold);
+	}
+	
+	
 }
 
 void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
@@ -106,6 +124,7 @@ void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 			UE_LOG(LogTemp, Warning, TEXT("MyGold : %d"), MyGold);
 			bIsNewItem = false;
 		}
+
 		/*골드 제외 아이템일 경우*/
 		else {
 			for (FItemData& Item : InventoryItems) {
@@ -251,6 +270,8 @@ void AC_InventoryCharacter::UpdateStats_Implementation(float NewHunger, float Ne
 {
 }
 
+
+
 void AC_InventoryCharacter::OnRep_Stats()
 {
 	if (IsLocallyControlled()) {
@@ -276,11 +297,10 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 {
 	if (ItemSubclass) {
 		if (HasAuthority()) {
-			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
-				Item->Use(this, IsShopItem);
-			}
-			
 			if (!ShopKeeper) {
+				if (AItem* Item = ItemSubclass.GetDefaultObject()) {
+					Item->Use(this, IsShopItem);
+				}
 				uint8 Index = 0;
 				for (FItemData& Item : InventoryItems) {
 					if (Item.ItemClass == ItemSubclass) {
@@ -299,7 +319,12 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 				}
 			}
 			else {
-				ShopKeeper->TransfferedItem(ItemSubclass);
+				if (ShopKeeper->CanBuyItem(MyGold, ItemSubclass)) {
+					if (AItem* Item = ItemSubclass.GetDefaultObject()) {
+						Item->Use(this, IsShopItem);
+						ShopKeeper->BuyItem(this, ItemSubclass);
+					}
+				}
 			}
 
 		}
