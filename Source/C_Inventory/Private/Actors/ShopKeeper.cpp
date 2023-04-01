@@ -4,6 +4,7 @@
 #include "Actors/ShopKeeper.h"
 #include "C_Inventory/C_InventoryCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -34,11 +35,43 @@ void AShopKeeper::BeginPlay()
 	
 }
 
+void AShopKeeper::OnRep_Items()
+{
+	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+		if (Character->IsLocallyControlled()) {
+		}Character->UpdateShop(Items);
+		
+	}
+}
+
 void AShopKeeper::Interact(AC_InventoryCharacter* Character)
 {
 	if (Character) {
-		Character->OpenShop(Items);
+
+		Character->OpenShop(Items, this);
 	}
+}
+
+void AShopKeeper::TransfferedItem(TSubclassOf<AItem> ItemSubclass)
+{
+	uint8 Index = 0;
+	for (FItemData& Item : Items) {
+		if (Item.ItemClass == ItemSubclass) {
+			--Item.StackCount;
+			/*아이템을 모두 소모했을 경우*/
+			if (Item.StackCount <= 0) {
+				Items.RemoveAt(Index);
+
+			}
+			break;
+		}
+		++Index;
+	}
+	OnRep_Items();
+	//TEST
+	//for (FItemData& Item : Items) {
+	//	UE_LOG(LogTemp, Warning, TEXT("ITEM STACK : %d"), Item.StackCount);
+	//}
 }
 
 

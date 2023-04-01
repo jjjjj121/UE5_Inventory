@@ -272,28 +272,34 @@ void AC_InventoryCharacter::OnRep_InventoryItems()
 	}
 }
 
-void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
+void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem)
 {
 	if (ItemSubclass) {
 		if (HasAuthority()) {
 			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
 				Item->Use(this, IsShopItem);
 			}
-			uint8 Index = 0;
-			for (FItemData& Item : InventoryItems) {
-				if (Item.ItemClass == ItemSubclass) {
-					--Item.StackCount;
-					/*아이템을 모두 소모했을 경우*/
-					if (Item.StackCount<= 0) {
-						InventoryItems.RemoveAt(Index);
+			
+			if (!ShopKeeper) {
+				uint8 Index = 0;
+				for (FItemData& Item : InventoryItems) {
+					if (Item.ItemClass == ItemSubclass) {
+						--Item.StackCount;
+						/*아이템을 모두 소모했을 경우*/
+						if (Item.StackCount <= 0) {
+							InventoryItems.RemoveAt(Index);
 
+						}
+						break;
 					}
-					break;
+					++Index;
 				}
-				++Index;
+				if (IsLocallyControlled()) {
+					OnRep_InventoryItems();
+				}
 			}
-			if (IsLocallyControlled()) {
-				OnRep_InventoryItems();
+			else {
+				ShopKeeper->TransfferedItem(ItemSubclass);
 			}
 
 		}
@@ -302,13 +308,13 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, bool IsShop
 			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
 				Item->Use(this, IsShopItem);
 			}
-			Server_UseItem(ItemSubclass, IsShopItem);
+			Server_UseItem(ItemSubclass, ShopKeeper,IsShopItem);
 		}
 	}
 
 }
 
-bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
+bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem)
 {
 	/*아래 주석의 경우는 버그를 이용해 아이템을 사용하려는 경우 서버에서 킥을 하기 위함*/
 	///*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
@@ -324,17 +330,17 @@ bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubcl
 	return true;
 }
 
-void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass, bool IsShopItem)
+void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem)
 {
 	if (IsShopItem) {
-		UseItem(ItemSubclass, IsShopItem);
+		UseItem(ItemSubclass, ShopKeeper,IsShopItem);
 	}
 	else {
 		/*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
 		for (FItemData& Item : InventoryItems) {
 			if (Item.ItemClass == ItemSubclass) {
 				if (Item.StackCount) {
-					UseItem(ItemSubclass, IsShopItem);
+					UseItem(ItemSubclass, ShopKeeper,IsShopItem);
 				}
 
 				return;

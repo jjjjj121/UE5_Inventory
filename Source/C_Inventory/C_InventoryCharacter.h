@@ -98,11 +98,11 @@ protected:
 
 	/*아이템 사용 함수 -> 인벤토리 아이콘 클릭 시 호출*/
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void UseItem(TSubclassOf<AItem> ItemSubclass, bool IsShopItem = false);
+	void UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem = false);
 
 	/*UseItem RPC함수 : client -> server */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_UseItem(TSubclassOf<AItem> ItemSubclass, bool IsShopItem =false);
+	void Server_UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem =false);
 
 			
 protected:
@@ -122,7 +122,10 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OpenShop(const TArray<FItemData>& Items);
+	void OpenShop(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateShop(const TArray<FItemData>& Items);
 
 public:
 

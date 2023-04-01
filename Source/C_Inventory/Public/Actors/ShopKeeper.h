@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "InteractInterface.h"
 #include "C_Inventory/Public/Structs.h"
+#include "Item.h"
 #include "ShopKeeper.generated.h"
 
 UCLASS()
@@ -21,8 +22,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	class USkeletalMeshComponent* ShopKeeperMesh;
 
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Property")
+	UPROPERTY(ReplicatedUsing = OnRep_Items, EditAnywhere, BlueprintReadWrite, Category = "Property")
 	TArray<FItemData> Items;
+
+	UFUNCTION()
+	void OnRep_Items();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -33,4 +37,5 @@ protected:
 public:
 	virtual void Interact(class AC_InventoryCharacter* Character) override;
 
+	virtual void TransfferedItem(TSubclassOf<AItem> ItemSubclass);
 };
