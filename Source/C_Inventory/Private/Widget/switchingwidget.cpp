@@ -1,0 +1,86 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Widget/switchingwidget.h"
+#include "Components/WidgetSwitcher.h"
+#include "Kismet/GameplayStatics.h"
+#include "C_Inventory/Public/Widget/hudwidget.h"
+#include "C_Inventory/Public/Widget/Shop.h"
+
+UInventory* Uswitchingwidget::GetW_Inventory()
+{
+	return W_Inventory;
+}
+
+Uhudwidget* Uswitchingwidget::GetW_HUD()
+{
+	return W_HUD;
+}
+
+UWidgetSwitcher* Uswitchingwidget::GetWS_Interface()
+{
+	
+	return WS_Interface;
+}
+
+UShop* Uswitchingwidget::GetW_Shop()
+{
+	return W_Shop;
+}
+
+int32 Uswitchingwidget::GetActiveWidgetIndex()
+{
+	return WS_Interface->GetActiveWidgetIndex();
+}
+
+void Uswitchingwidget::SwitchingUI(bool IsInventoryUI)
+{
+	/*inventory*/
+	if (IsInventoryUI) {
+		WS_Interface->SetActiveWidgetIndex(1);
+
+		if (APlayerController* PlayerController = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))) {
+			PlayerController->SetInputMode(FInputModeGameAndUI());
+
+			/*mouse capture mode 를 우클릭시에만 캡쳐되도록 변경*/
+			/*이 설정을 안해줄 경우 GameandUI Mode에서는 좌클릭시 캡쳐되기 때문에 Mouse Button Up 함수가 호출이 안되는 현상 발생함*/
+			UGameplayStatics::SetViewportMouseCaptureMode(GetWorld(), EMouseCaptureMode::CaptureDuringRightMouseDown);
+
+			PlayerController->SetShowMouseCursor(true);
+		}
+	}
+	/*crosshair*/
+	else {
+		WS_Interface->SetActiveWidgetIndex(0);
+
+		if (APlayerController* PlayerController = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))) {
+			PlayerController->SetInputMode(FInputModeGameOnly());
+
+			/*Game Mode로 돌아갈 때 원래 기본 mouse capture mode로 변경*/
+			UGameplayStatics::SetViewportMouseCaptureMode(GetWorld(), EMouseCaptureMode::CapturePermanently_IncludingInitialMouseDown);
+			PlayerController->SetShowMouseCursor(false);
+		}
+	}
+
+
+}
+
+void Uswitchingwidget::UpdateStats(float Hunger, float Health)
+{
+	W_HUD->UpdateStats(Hunger, Health);
+}
+
+void Uswitchingwidget::OpenShopUI()
+{
+	SwitchingUI(true);
+	W_Shop->SetVisibility(ESlateVisibility::Visible);
+
+}
+
+void Uswitchingwidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	W_Shop->ParentWidget = this;
+}
+

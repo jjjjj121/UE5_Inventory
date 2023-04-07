@@ -72,10 +72,10 @@ protected:
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
-	float Health;
+	float Health = 100.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
-	float Hunger;
+	float Hunger = 100.0f;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadOnly, Category = "Property")
 	int32 MyGold = 0;
@@ -90,11 +90,8 @@ protected:
 	/*위 변수가 업데이트 될 때마다 호출될 Notify 함수 -> void OnRep_FUNCNAME();이 기본 형식*/
 	UFUNCTION()
 	void OnRep_InventoryItems();
-	
-	/*아이템 - 인벤토리에 추가 함수*/
-	/*BlueprintImplementableEvent 키워드는 특수상황에 대한 사용자이벤트를 만들기 위한 키워드로 헤더에만 선언하고 본문은 블루프린트에서 작성한다. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "InventorySystem")
-	void AddItemAndUpdateInventory(FItemData ItemData, const TArray<FItemData>& NewInventoryItems = TArray<FItemData>());
+
+public:
 
 	/*아이템 사용 함수 -> 인벤토리 아이콘 클릭 시 호출*/
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
@@ -121,10 +118,13 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
+	void AddItemAndUpdateInventory(FItemData ItemData, const TArray<FItemData>& NewInventoryItems = TArray<FItemData>());
+
+	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
 	void OpenShop(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper);
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
 	void UpdateShop(const TArray<FItemData>& Items);
 
 	UFUNCTION(BlueprintCallable)
@@ -132,6 +132,20 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveGold(int32 RemoveValue);
+
+public:
+	/*Test Widget*/
+	UPROPERTY(EditAnywhere, Category = "Widget")
+	TSubclassOf<UUserWidget> WidgetClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Widget")
+	class Uswitchingwidget* HUDWidget;
+
+	FString ItemTagText = "Set";
+
+	UFUNCTION(BlueprintCallable, Category ="Widget")
+	void SwitchingUI();
+
 
 public:
 

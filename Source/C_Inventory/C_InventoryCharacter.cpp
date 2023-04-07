@@ -15,6 +15,9 @@
 #include "InputMappingContext.h"
 #include "Net/UnrealNetwork.h"
 #include "C_Inventory/Public/Actors/ShopKeeper.h"
+#include "C_Inventory/Public/Widget/switchingwidget.h"
+#include "C_Inventory/Public/Widget/Inventory.h"
+#include "C_Inventory/Public/Widget/Shop.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AC_InventoryCharacter
@@ -23,7 +26,7 @@ AC_InventoryCharacter::AC_InventoryCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -81,12 +84,21 @@ void AC_InventoryCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	/*Create Widget*/
+	if (IsLocallyControlled()) {
+		HUDWidget = Cast<Uswitchingwidget>(CreateWidget(GetWorld(), WidgetClass));
+		if (HUDWidget) {
+			HUDWidget->AddToViewport();
+		}
+	}
+
 }
 
 void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
 	/*아래 매크로 사용하기 위해서 Net/UnrealNetwork.h 포함 필요*/
 	/*아래 매크로를 통해 replication의 세밀한 제어를 위한 부차적인 조건을 추가시킬 수 있다.*/
 	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, InventoryItems, COND_OwnerOnly);
@@ -109,14 +121,16 @@ void AC_InventoryCharacter::RemoveGold(int32 RemoveValue)
 		OnRep_InventoryItems();
 		UE_LOG(LogTemp, Warning, TEXT("MyGold : %d"), MyGold);
 	}
-	
-	
+
+
 }
+
+
 
 void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 {
 	if (HasAuthority()) {
-		
+
 		bool bIsNewItem = true;
 		/*아이템이 골드일 경우*/
 		if (ItemData.ItemClass == AGold::StaticClass()) {
@@ -152,7 +166,7 @@ void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData)
 			OnRep_InventoryItems();
 		}
 	}
-	
+
 }
 
 void AC_InventoryCharacter::AddHealth(float Value)
@@ -171,10 +185,13 @@ void AC_InventoryCharacter::RemoveHunger(float Value)
 	if (IsLocallyControlled()) {
 		UpdateStats(Hunger, Health);
 	}
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("REMOVED HEALTH : %f"), Hunger);
 
 }
+
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -183,7 +200,7 @@ void AC_InventoryCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+
 		//Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -206,7 +223,7 @@ void AC_InventoryCharacter::Interact()
 
 	FVector Start = FollowCamera->GetComponentLocation();
 	FVector End = Start + FollowCamera->GetForwardVector() * 500.0f;
-	
+
 	/*서버일 경우 기존 interact 함수 사용*/
 	if (HasAuthority()) {
 		Interact(Start, End);
@@ -234,33 +251,35 @@ void AC_InventoryCharacter::Interact(FVector Start, FVector End)
 	/*라인트레이스 세팅*/
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		
+
 		/*맞은 엑터가 상점*/
 		AShopKeeper* ShopKeeper = Cast<AShopKeeper>(HitResult.GetActor());
 		if (ShopKeeper) {
 			UE_LOG(LogTemp, Warning, TEXT("OPEN"));
 			if (IsLocallyControlled()) {
-				
+
 				ShopKeeper->Interact(this);
 			}
-			
+
 			return;
 		}
-		
+
 		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
 
 			Interface->Interact(this);
 		}
-		
+
 	}
 }
+
+
 
 bool AC_InventoryCharacter::Server_Interact_Validate(FVector Start, FVector End)
 {
 	return true;
 }
 
-void AC_InventoryCharacter::Server_Interact_Implementation(FVector Start, FVector End){
+void AC_InventoryCharacter::Server_Interact_Implementation(FVector Start, FVector End) {
 
 	Interact(Start, End);
 
@@ -268,6 +287,9 @@ void AC_InventoryCharacter::Server_Interact_Implementation(FVector Start, FVecto
 
 void AC_InventoryCharacter::UpdateStats_Implementation(float NewHunger, float NewHealth)
 {
+	if (HUDWidget) {
+		HUDWidget->UpdateStats(NewHunger, NewHealth);
+	}
 }
 
 
@@ -284,16 +306,17 @@ void AC_InventoryCharacter::OnRep_InventoryItems()
 {
 	/*Inventory에 Item이 존재할 경우*/
 	if (InventoryItems.Num()) {
-		
+
 		/*최근 아이템이 추가되어야 하기 떄문에 Num() -1로 마지막 인덱스 가리킴*/
 		AddItemAndUpdateInventory(InventoryItems[InventoryItems.Num() - 1], InventoryItems);
 	}
 	else {
 		AddItemAndUpdateInventory(FItemData(), InventoryItems);
+
 	}
 }
 
-void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem)
+void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem)
 {
 	if (ItemSubclass) {
 		if (HasAuthority()) {
@@ -308,7 +331,6 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 						/*아이템을 모두 소모했을 경우*/
 						if (Item.StackCount <= 0) {
 							InventoryItems.RemoveAt(Index);
-
 						}
 						break;
 					}
@@ -333,7 +355,7 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 			if (AItem* Item = ItemSubclass.GetDefaultObject()) {
 				Item->Use(this, IsShopItem);
 			}
-			Server_UseItem(ItemSubclass, ShopKeeper,IsShopItem);
+			Server_UseItem(ItemSubclass, ShopKeeper, IsShopItem);
 		}
 	}
 
@@ -358,14 +380,14 @@ bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubcl
 void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem)
 {
 	if (IsShopItem) {
-		UseItem(ItemSubclass, ShopKeeper,IsShopItem);
+		UseItem(ItemSubclass, ShopKeeper, IsShopItem);
 	}
 	else {
 		/*인벤토리 배열에 사용하려는 아이템이 존재할 경우*/
 		for (FItemData& Item : InventoryItems) {
 			if (Item.ItemClass == ItemSubclass) {
 				if (Item.StackCount) {
-					UseItem(ItemSubclass, ShopKeeper,IsShopItem);
+					UseItem(ItemSubclass, ShopKeeper, IsShopItem);
 				}
 
 				return;
@@ -373,7 +395,7 @@ void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> Ite
 		}
 	}
 
-	
+
 
 }
 
@@ -393,7 +415,7 @@ void AC_InventoryCharacter::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
@@ -417,8 +439,52 @@ void AC_InventoryCharacter::Look(const FInputActionValue& Value)
 }
 
 
+void AC_InventoryCharacter::SwitchingUI()
+{
+	if (HUDWidget) {
+		if ((HUDWidget->GetActiveWidgetIndex() == 0)) {
+			HUDWidget->SwitchingUI(1);
+		}
+		else {
+			HUDWidget->SwitchingUI(0);
+		}
+	}
+}
 
+void AC_InventoryCharacter::AddItemAndUpdateInventory_Implementation(FItemData ItemData, const TArray<FItemData>& NewInventoryItems)
+{
+	if (HUDWidget) {
+		/*Gold Update*/
+		HUDWidget->W_Inventory->UpdateGold(MyGold);
 
+		/*Item일 경우*/
+		if (HUDWidget->W_Inventory->IsNewItem(NewInventoryItems)) {
+			HUDWidget->W_Inventory->AddItem(ItemData);
+		}
+		else {
+			HUDWidget->W_Inventory->Update(NewInventoryItems);
+		}
+		
+	}
+	
+}
+
+void AC_InventoryCharacter::OpenShop_Implementation(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper)
+{
+	if (HUDWidget) {
+		if (!HUDWidget->W_Shop->IsVisible()) {
+			HUDWidget->W_Shop->AddShopItem(Items, ShopKeeper);
+			HUDWidget->OpenShopUI();
+		}
+	}
+}
+
+void AC_InventoryCharacter::UpdateShop_Implementation(const TArray<FItemData>& Items)
+{
+	if (HUDWidget) {
+		HUDWidget->W_Shop->UpdateShop(Items);
+	}
+}
 
 
 

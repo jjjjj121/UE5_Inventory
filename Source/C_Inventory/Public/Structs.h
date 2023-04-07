@@ -13,8 +13,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UTexture2D* ItemImage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float ItemCost;
+	float ItemCost = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 StackCount = 1;
+
+public:
+	void SetDefault() { ItemClass = 0, ItemImage = 0, ItemCost = 0, StackCount = 1; };
 };
 

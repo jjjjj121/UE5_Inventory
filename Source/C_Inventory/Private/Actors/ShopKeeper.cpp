@@ -49,7 +49,6 @@ void AShopKeeper::Interact(AC_InventoryCharacter* Character)
 {
 
 	if (Character) {
-
 		Character->OpenShop(Items, this);
 	}
 }
