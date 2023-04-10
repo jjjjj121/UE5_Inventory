@@ -10,6 +10,10 @@ class UInventory;
 class Uhudwidget;
 class UWidgetSwitcher;
 class UShop;
+class UTradeWidget;
+class UNotificationTrade;
+class AC_InventoryCharacter;
+
 /**
  * 
  */
@@ -31,22 +35,38 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory Widget", meta = (BindWidget))
 	UShop* W_Shop;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory Widget", meta = (BindWidget))
+	UTradeWidget* W_TradeWidget;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory Widget", meta = (BindWidget))
+	UNotificationTrade* W_NotificationTrade;
 public:
 
 	UInventory* GetW_Inventory();
 	Uhudwidget* GetW_HUD();
 	UWidgetSwitcher* GetWS_Interface();
 	UShop* GetW_Shop();
+	UTradeWidget* GetW_TradeWidget();
+	UNotificationTrade* GetW_NotificationTrade();
 	int32 GetActiveWidgetIndex();
 
 
 public:
 	UFUNCTION(BlueprintCallable)
 	void SwitchingUI(bool IsInventoryUI);
+
+	void GameandUIMode();
+	void OnlyGameMode();
+
 	void UpdateStats(float Hunger, float Health);
 	void OpenShopUI();
+
+	void TradeRequest(AC_InventoryCharacter* Character);
+	void OnTrade(AC_InventoryCharacter* TradeUser);
+	void EndTrade();
 
 protected:
 	virtual void NativeConstruct() override;
 
+	
 };

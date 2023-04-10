@@ -9,43 +9,43 @@
 
 class AItem;
 
-UCLASS(config=Game)
+UCLASS(config = Game)
 class AC_InventoryCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+		/** Camera boom positioning the camera behind the character */
+		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
-	
+		class UCameraComponent* FollowCamera;
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
+		class UInputMappingContext* DefaultMappingContext;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
+		class UInputAction* JumpAction;
 
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* MoveAction;
+		class UInputAction* MoveAction;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+		class UInputAction* LookAction;
 
 	/* Interact Input Action*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* InteractAction;
+		class UInputAction* InteractAction;
 
 
 public:
 	AC_InventoryCharacter();
-	
+
 
 protected:
 
@@ -60,52 +60,52 @@ protected:
 
 	/*Interact RPC함수 : client -> server */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Interact(FVector Start, FVector End);
-	
+		void Server_Interact(FVector Start, FVector End);
+
 
 	/*Stats updates Function*/
 	UFUNCTION(BlueprintNativeEvent)
-	void UpdateStats(float NewHunger, float NewHealth);
+		void UpdateStats(float NewHunger, float NewHealth);
 	/*아래 함수도 선언을 해줘야하는건지 정확히 모르겠음*/
 	//void UpdateStats_Implementation(float NewHunger, float NewHealth);
 
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
-	float Health = 100.0f;
+		float Health = 100.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Stats, BlueprintReadWrite, Category = "Property")
-	float Hunger = 100.0f;
-	
+		float Hunger = 100.0f;
+
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadOnly, Category = "Property")
-	int32 MyGold = 0;
+		int32 MyGold = 0;
 
 	UFUNCTION()
-	void OnRep_Stats();
+		void OnRep_Stats();
 
 
 	/*Notify replicate를 실행하는 변수 선언*/
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadWrite, Category = "Property")
-	TArray<FItemData> InventoryItems;
+		TArray<FItemData> InventoryItems;
 	/*위 변수가 업데이트 될 때마다 호출될 Notify 함수 -> void OnRep_FUNCNAME();이 기본 형식*/
 	UFUNCTION()
-	void OnRep_InventoryItems();
+		void OnRep_InventoryItems();
 
 public:
 
 	/*아이템 사용 함수 -> 인벤토리 아이콘 클릭 시 호출*/
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem = false);
+		void UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false);
 
 	/*UseItem RPC함수 : client -> server */
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper ,bool IsShopItem =false);
+		void Server_UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false);
 
-			
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+
 	// To add mapping context
 	virtual void BeginPlay();
 
@@ -119,32 +119,32 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
-	void AddItemAndUpdateInventory(FItemData ItemData, const TArray<FItemData>& NewInventoryItems = TArray<FItemData>());
+		void AddItemAndUpdateInventory(FItemData ItemData, const TArray<FItemData>& NewInventoryItems = TArray<FItemData>());
 
 	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
-	void OpenShop(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper);
+		void OpenShop(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "InventorySystem")
-	void UpdateShop(const TArray<FItemData>& Items);
+		void UpdateShop(const TArray<FItemData>& Items);
 
 	UFUNCTION(BlueprintCallable)
-	int32 GetGold();
+		int32 GetGold();
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveGold(int32 RemoveValue);
+		void RemoveGold(int32 RemoveValue);
 
 public:
 	/*Test Widget*/
 	UPROPERTY(EditAnywhere, Category = "Widget")
-	TSubclassOf<UUserWidget> WidgetClass;
+		TSubclassOf<UUserWidget> WidgetClass;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Widget")
-	class Uswitchingwidget* HUDWidget;
+		class Uswitchingwidget* HUDWidget;
 
 	FString ItemTagText = "Set";
 
-	UFUNCTION(BlueprintCallable, Category ="Widget")
-	void SwitchingUI();
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+		void SwitchingUI();
 
 
 public:
@@ -152,6 +152,44 @@ public:
 	void AddInventoryItem(FItemData ItemData);
 	void AddHealth(float Value);
 	void RemoveHunger(float Value);
+
+	void TryTrade(AC_InventoryCharacter* Character);
+	void ClientTryTrade(AC_InventoryCharacter* TradeUser);
+	void OnTrade(AC_InventoryCharacter* TradeUser);
+	void EndTrade();
+	void EndTrade(AC_InventoryCharacter* TradeUser);
+	void SetWantTrade(bool NewValue);
+public:
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_TryTrade(AC_InventoryCharacter* Character);
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multicast_TryTrade(AC_InventoryCharacter* Character);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ClientTryTrade(AC_InventoryCharacter* TradeUser);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SetWantTrade(bool NewValue);
+
+	UFUNCTION(Client, Reliable, WithValidation)
+	void Client_OnTrade(AC_InventoryCharacter* TradeUser);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_EndTrade(AC_InventoryCharacter* TradeUser);
+
+	UFUNCTION(Client, Reliable, WithValidation)
+	void Client_EndTrade();
+private:
+	/*ID 만들 경우*/
+	//UPROPERTY(BlueprintReadOnly)
+	//FString UserID;
+
+
+public:
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool WantTrade;
 
 
 };

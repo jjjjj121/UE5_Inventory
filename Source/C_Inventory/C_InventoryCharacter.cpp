@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 // AC_InventoryCharacter
 
+
 AC_InventoryCharacter::AC_InventoryCharacter()
 {
 	// Set size for collision capsule
@@ -105,6 +106,7 @@ void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION(AC_InventoryCharacter, MyGold, COND_OwnerOnly);
 	DOREPLIFETIME(AC_InventoryCharacter, Health);
 	DOREPLIFETIME(AC_InventoryCharacter, Hunger);
+	DOREPLIFETIME(AC_InventoryCharacter, WantTrade);
 
 }
 
@@ -193,6 +195,8 @@ void AC_InventoryCharacter::RemoveHunger(float Value)
 
 
 
+
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -231,7 +235,7 @@ void AC_InventoryCharacter::Interact()
 	/*클라일 경우 Server_Interact를 통해 서버에서 interact 실행*/
 	/*왜 ? -> 서버에서 실행되어야 replicate 되어서 서버와 클라 모두 동기화 되기때문*/
 	else {
-		Interact(Start, End);
+		//Interact(Start, End);
 		Server_Interact(Start, End);
 	}
 
@@ -251,21 +255,23 @@ void AC_InventoryCharacter::Interact(FVector Start, FVector End)
 	/*라인트레이스 세팅*/
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-
+		UE_LOG(LogTemp, Warning, TEXT("Hit"));
 		/*맞은 엑터가 상점*/
 		AShopKeeper* ShopKeeper = Cast<AShopKeeper>(HitResult.GetActor());
 		if (ShopKeeper) {
-			UE_LOG(LogTemp, Warning, TEXT("OPEN"));
+			UE_LOG(LogTemp, Warning, TEXT("Shop OPEN"));
 			if (IsLocallyControlled()) {
-
 				ShopKeeper->Interact(this);
 			}
-
 			return;
 		}
-
+		/*Trade*/
+		AC_InventoryCharacter* UserCharacter = Cast<AC_InventoryCharacter>(HitResult.GetActor());
+		if (UserCharacter) {
+			TryTrade(UserCharacter);
+		}
+		/*Item*/
 		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor())) {
-
 			Interface->Interact(this);
 		}
 
@@ -464,9 +470,9 @@ void AC_InventoryCharacter::AddItemAndUpdateInventory_Implementation(FItemData I
 		else {
 			HUDWidget->W_Inventory->Update(NewInventoryItems);
 		}
-		
+
 	}
-	
+
 }
 
 void AC_InventoryCharacter::OpenShop_Implementation(const TArray<FItemData>& Items, AShopKeeper* ShopKeeper)
@@ -486,5 +492,155 @@ void AC_InventoryCharacter::UpdateShop_Implementation(const TArray<FItemData>& I
 	}
 }
 
+
+
+void AC_InventoryCharacter::OnTrade(AC_InventoryCharacter* TradeUser)
+{
+
+	if (HasAuthority()) {
+		if (IsLocallyControlled()) {
+			HUDWidget->OnTrade(TradeUser);
+		}
+		else {
+			Client_OnTrade(TradeUser);
+		}
+	}
+	else {
+		if (IsLocallyControlled()) {
+			HUDWidget->OnTrade(TradeUser);
+		}
+	}
+	
+}
+
+void AC_InventoryCharacter::EndTrade()
+{
+	SetWantTrade(false);
+	if (IsLocallyControlled()) {
+		HUDWidget->EndTrade();
+	}
+	else {
+		Client_EndTrade();
+	}
+}
+
+bool AC_InventoryCharacter::Client_EndTrade_Validate()
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Client_EndTrade_Implementation()
+{
+	EndTrade();
+}
+
+void AC_InventoryCharacter::EndTrade(AC_InventoryCharacter* TradeUser)
+{
+	Server_EndTrade(TradeUser);
+}
+
+
+bool AC_InventoryCharacter::Server_EndTrade_Validate(AC_InventoryCharacter* TradeUser)
+{
+	return true;
+}
+void AC_InventoryCharacter::Server_EndTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	TradeUser->EndTrade();
+}
+
+bool AC_InventoryCharacter::Client_OnTrade_Validate(AC_InventoryCharacter* TradeUser)
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Client_OnTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	OnTrade(TradeUser);
+}
+
+void AC_InventoryCharacter::ClientTryTrade(AC_InventoryCharacter* TradeUser)
+{
+	Server_ClientTryTrade(TradeUser);
+}
+
+
+bool AC_InventoryCharacter::Server_ClientTryTrade_Validate(AC_InventoryCharacter* TradeUser)
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Server_ClientTryTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	TradeUser->TryTrade(this);
+}
+
+void AC_InventoryCharacter::SetWantTrade(bool NewValue)
+{
+	if (HasAuthority()) {
+		WantTrade = NewValue;
+	}
+	else {
+		Server_SetWantTrade(NewValue);
+	}
+}
+
+
+
+bool AC_InventoryCharacter::Server_SetWantTrade_Validate(bool NewValue)
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Server_SetWantTrade_Implementation(bool NewValue)
+{
+	WantTrade = NewValue;
+}
+
+void AC_InventoryCharacter::TryTrade(AC_InventoryCharacter* Character)
+{
+	if (WantTrade && Character->WantTrade) {
+		OnTrade(Character);
+		Character->OnTrade(this);
+
+	}
+	else {
+		/*Server*/
+		if (HasAuthority()) {
+			Multicast_TryTrade(Character);
+		}
+		/*Client*/
+		else {
+			Server_TryTrade(Character);
+		}
+	}
+	}
+
+
+bool AC_InventoryCharacter::Multicast_TryTrade_Validate(AC_InventoryCharacter* Character)
+{
+	return true;
+}
+
+void AC_InventoryCharacter::Multicast_TryTrade_Implementation(AC_InventoryCharacter* Character)
+{
+
+	if (IsLocallyControlled()) {
+		if (HUDWidget) {
+			HUDWidget->TradeRequest(Character); 
+		}
+	}
+}
+
+bool AC_InventoryCharacter::Server_TryTrade_Validate(AC_InventoryCharacter* Character)
+{
+	return true;
+}
+
+
+void AC_InventoryCharacter::Server_TryTrade_Implementation(AC_InventoryCharacter* Character)
+{
+	Multicast_TryTrade(Character);
+}
 
 
