@@ -11,7 +11,7 @@ class UTextBlock;
 class UImage;
 class AShopKeeper;
 class UDragItemVisual;
-
+class UTradeWidget;
 /**
  * 
  */
@@ -40,6 +40,9 @@ public:
 	AShopKeeper* ShopKeeper;
 	bool IsShopItem = false;
 
+	UTradeWidget* TradeWidget;
+	bool IsMyTradeItem = false;
+	bool IsUserTradeItem = false;
 public:
 
 	UTextBlock* GetItemText();

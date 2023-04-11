@@ -32,7 +32,7 @@ protected:
 public:
 	virtual void Interact(class AC_InventoryCharacter* Character) override;
 
-	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false) override;
+	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false, bool IsInTradeWIdget = false) override;
 
 	
 

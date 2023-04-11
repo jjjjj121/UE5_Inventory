@@ -29,7 +29,7 @@ protected:
 
 
 public:
-	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop =false) override;
+	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop =false, bool IsInTradeWIdget = false) override;
 
 
 };

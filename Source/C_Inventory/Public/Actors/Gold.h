@@ -17,5 +17,5 @@ class C_INVENTORY_API AGold : public AItem
 public:
 	AGold();
 
-	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false) override;
+	virtual void Use(AC_InventoryCharacter* Character, bool IsInShop = false, bool IsInTradeWIdget = false) override;
 };

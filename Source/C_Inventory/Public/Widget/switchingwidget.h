@@ -65,6 +65,8 @@ public:
 	void OnTrade(AC_InventoryCharacter* TradeUser);
 	void EndTrade();
 
+	void UpdateTradeGold(int32 TradeGold);
+
 protected:
 	virtual void NativeConstruct() override;
 

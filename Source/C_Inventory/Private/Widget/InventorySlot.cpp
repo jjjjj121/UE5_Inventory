@@ -31,9 +31,7 @@ FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
 	FReply Reply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
-		UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE BUTTON! : %d"), IsShopItem);
-		
-		
+		//UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE BUTTON! : %d"), IsShopItem);
 		/*드레그 했는지 감지*/
 		Reply.DetectDrag(TakeWidget(),EKeys::LeftMouseButton);
 	}
@@ -46,9 +44,9 @@ FReply UInventorySlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const 
 	FReply Reply = Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 
-		UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE Up! : %d"), IsShopItem);
+		//UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE Up! : %d"), IsShopItem);
 		if (AC_InventoryCharacter* PlayerCharacter = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
-			PlayerCharacter->UseItem(ItemData.ItemClass, ShopKeeper, IsShopItem);
+			PlayerCharacter->UseItem(ItemData.ItemClass, ShopKeeper, IsShopItem, IsMyTradeItem);
 		}
 	}
 	

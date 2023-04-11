@@ -6,11 +6,53 @@
 #include "Components/UniformGridPanel.h"
 #include "C_Inventory/Public/Actors/Item.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "Components/EditableTextBox.h"
+#include "C_Inventory/C_InventoryCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "C_Inventory/Public/Actors/Gold.h"
+#include "C_Inventory/Public/Widget/switchingwidget.h"
 
 void UInventory::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	BT_Gold->OnClicked.AddDynamic(this, &UInventory::OnClickGold);
+	ETB_Gold->OnTextCommitted.AddDynamic(this, &UInventory::OnTextCommit);
 	InitInventory();
+}
+
+void UInventory::OnClickGold()
+{
+
+	ETB_Gold->SetVisibility(ESlateVisibility::Visible);
+
+	if(APlayerController* Controller = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))) {
+		ETB_Gold->SetUserFocus(Controller);
+	}
+}
+
+void UInventory::OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (CommitMethod == ETextCommit::OnEnter) {
+		//UE_LOG(LogTemp, Warning, TEXT("ON TEXT COMMIT : %s"), *Text.ToString());
+		if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+			int32 TradeValue = FCString::Atof(*Text.ToString());
+			Character->GetGold() > TradeValue ? TradeValue : TradeValue = Character->GetGold();
+
+			FItemData GoldData;
+			GoldData.ItemClass = AGold::StaticClass();
+			GoldData.StackCount = TradeValue;
+
+			Character->RemoveGold(TradeValue);
+			Character->AddInventoryItem(GoldData, false);
+
+			ETB_Gold->SetText(FText::FromString(FString::Printf(TEXT(""))));
+			ETB_Gold->SetVisibility(ESlateVisibility::Collapsed);
+			
+		}
+	}
+	
 }
 
 UUniformGridPanel* UInventory::GetGrid_Inventory()
@@ -21,6 +63,16 @@ UUniformGridPanel* UInventory::GetGrid_Inventory()
 UTextBlock* UInventory::GetTB_Gold()
 {
 	return TB_Gold;
+}
+
+UButton* UInventory::GetBT_Gold()
+{
+	return BT_Gold;
+}
+
+UEditableTextBox* UInventory::GetETB_Gold()
+{
+	return ETB_Gold;
 }
 
 void UInventory::InitInventory()

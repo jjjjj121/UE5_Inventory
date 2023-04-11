@@ -9,6 +9,9 @@
 
 class UUniformGridPanel;
 class UTextBlock;
+class UButton;
+class UEditableTextBox;
+class Uswitchingwidget;
 /**
  * 
  */
@@ -24,14 +27,22 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory", meta = (BindWidget))
 	UTextBlock* TB_Gold;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory", meta = (BindWidget))
+	UButton* BT_Gold;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory", meta = (BindWidget))
+	UEditableTextBox* ETB_Gold;
+
 	UPROPERTY(EditAnywhere, Category = "Widget")
 	TSubclassOf<UUserWidget> SlotWidgetClass;
 
+	Uswitchingwidget* ParentWidget;
 public:
 	
 	UUniformGridPanel* GetGrid_Inventory();
 	UTextBlock* GetTB_Gold();
-
+	UButton* GetBT_Gold();
+	UEditableTextBox* GetETB_Gold();
 
 public:
 	void InitInventory();
@@ -49,5 +60,11 @@ protected:
 
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void OnClickGold();
+
+	UFUNCTION()
+	void OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod);
 
 };

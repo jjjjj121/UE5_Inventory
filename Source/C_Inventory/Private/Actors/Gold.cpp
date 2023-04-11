@@ -8,6 +8,6 @@ AGold::AGold()
 	ItemData.ItemClass = StaticClass();
 }
 
-void AGold::Use(AC_InventoryCharacter* Character, bool IsInShop)
+void AGold::Use(AC_InventoryCharacter* Character, bool IsInShop, bool IsInTradeWIdget)
 {
 }

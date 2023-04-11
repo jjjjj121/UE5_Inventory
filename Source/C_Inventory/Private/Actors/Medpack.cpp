@@ -11,12 +11,15 @@ AMedpack::AMedpack()
 	ItemData.ItemClass = StaticClass();
 }
 
-void AMedpack::Use(AC_InventoryCharacter* Character, bool IsInShop)
+void AMedpack::Use(AC_InventoryCharacter* Character, bool IsInShop, bool IsInTradeWIdget)
 {
 	Super::Use(Character, IsInShop);
 
-	if (Character && !IsInShop) {
-		Character->AddHealth(HealthValue);
+	if (Character) {
+		if (!Character->bRunningTrade && !IsInShop) {
+			Character->AddHealth(HealthValue);
+		}
 	}
-	
+
+
 }

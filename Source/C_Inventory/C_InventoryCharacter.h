@@ -80,6 +80,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryItems, BlueprintReadOnly, Category = "Property")
 		int32 MyGold = 0;
 
+	UPROPERTY(ReplicatedUsing = OnRep_TradeItems, BlueprintReadOnly, Category = "Property")
+		int32 TradeGold = 0;
+
 	UFUNCTION()
 		void OnRep_Stats();
 
@@ -91,15 +94,23 @@ protected:
 	UFUNCTION()
 		void OnRep_InventoryItems();
 
+	UPROPERTY(ReplicatedUsing = OnRep_TradeItems, BlueprintReadWrite, Category = "Property")
+	TArray<FItemData> TradeItems;
+
+	UFUNCTION()
+	void OnRep_TradeItems();
+
+	void AddItemAndUpdateTradeWidget(FItemData ItemData, const TArray<FItemData>& NewTradeWidgetItems = TArray<FItemData>());
+
 public:
 
 	/*아이템 사용 함수 -> 인벤토리 아이콘 클릭 시 호출*/
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-		void UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false);
+		void UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false, bool IsTradeWidgetItem = false);
 
 	/*UseItem RPC함수 : client -> server */
 	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false);
+		void Server_UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem = false, bool IsTradeWidgetItem = false);
 
 
 protected:
@@ -141,15 +152,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Widget")
 		class Uswitchingwidget* HUDWidget;
 
-	FString ItemTagText = "Set";
-
 	UFUNCTION(BlueprintCallable, Category = "Widget")
 		void SwitchingUI();
 
 
 public:
 
-	void AddInventoryItem(FItemData ItemData);
+	void AddInventoryItem(FItemData ItemData, bool IsInventoryItem = true);
 	void AddHealth(float Value);
 	void RemoveHunger(float Value);
 
@@ -158,29 +167,34 @@ public:
 	void OnTrade(AC_InventoryCharacter* TradeUser);
 	void EndTrade();
 	void EndTrade(AC_InventoryCharacter* TradeUser);
+
 	void SetWantTrade(bool NewValue);
+	void SetRunningTrade(bool NewValue);
 public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_TryTrade(AC_InventoryCharacter* Character);
+		void Server_TryTrade(AC_InventoryCharacter* Character);
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-	void Multicast_TryTrade(AC_InventoryCharacter* Character);
+		void Multicast_TryTrade(AC_InventoryCharacter* Character);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_ClientTryTrade(AC_InventoryCharacter* TradeUser);
+		void Server_ClientTryTrade(AC_InventoryCharacter* TradeUser);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_SetWantTrade(bool NewValue);
+	UFUNCTION(Server, Reliable)
+		void Server_SetWantTrade(bool NewValue);
+
+	UFUNCTION(Server, Reliable)
+		void Server_SetRunningTrade(bool NewValue);
 
 	UFUNCTION(Client, Reliable, WithValidation)
-	void Client_OnTrade(AC_InventoryCharacter* TradeUser);
+		void Client_OnTrade(AC_InventoryCharacter* TradeUser);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_EndTrade(AC_InventoryCharacter* TradeUser);
+		void Server_EndTrade(AC_InventoryCharacter* TradeUser);
 
 	UFUNCTION(Client, Reliable, WithValidation)
-	void Client_EndTrade();
+		void Client_EndTrade();
 private:
 	/*ID 만들 경우*/
 	//UPROPERTY(BlueprintReadOnly)
@@ -189,8 +203,10 @@ private:
 
 public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
-	bool WantTrade;
+		bool WantTrade;
 
+	UPROPERTY(Replicated, BlueprintReadOnly)
+		bool bRunningTrade = false;
 
 };
 

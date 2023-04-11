@@ -10,12 +10,14 @@ AFood::AFood()
 	ItemData.ItemClass = StaticClass();
 }
 
-void AFood::Use(AC_InventoryCharacter* Character, bool IsInShop)
+void AFood::Use(AC_InventoryCharacter* Character, bool IsInShop, bool IsInTradeWIdget)
 {
 	Super::Use(Character, IsInShop);
 
-	if (Character && !IsInShop) {
-		Character->RemoveHunger(RemoveFoodValue);
+	if (Character) {
+		if (!Character->bRunningTrade && !IsInShop) {
+			Character->RemoveHunger(RemoveFoodValue);
+		}
 	}
 	
 }

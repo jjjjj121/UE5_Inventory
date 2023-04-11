@@ -9,6 +9,7 @@
 #include "C_Inventory/C_InventoryCharacter.h"
 #include "C_Inventory/Public/Widget/TradeWidget.h"
 #include "C_Inventory/Public/Widget/NotificationTrade.h"
+#include "C_Inventory/Public/Widget/Inventory.h"
 
 
 UInventory* Uswitchingwidget::GetW_Inventory()
@@ -61,7 +62,6 @@ void Uswitchingwidget::SwitchingUI(bool IsInventoryUI)
 
 		OnlyGameMode();
 	}
-
 
 }
 
@@ -116,11 +116,17 @@ void Uswitchingwidget::EndTrade()
 
 }
 
+void Uswitchingwidget::UpdateTradeGold(int32 TradeGold)
+{
+	W_TradeWidget->UpdateGold(TradeGold);
+}
+
 
 void Uswitchingwidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	W_Inventory->ParentWidget = this;
 	W_Shop->ParentWidget = this;
 	W_NotificationTrade->ParentWidget = this;
 	W_TradeWidget->ParentWidget = this;

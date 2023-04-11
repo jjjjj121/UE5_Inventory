@@ -68,6 +68,7 @@ protected:
 	int32 TotalInventoryNum = 0;
 	int32 AmountofGrid = 14;
 	
+	int32 TradeGold = 0;
 
 public:
 	UFUNCTION()
