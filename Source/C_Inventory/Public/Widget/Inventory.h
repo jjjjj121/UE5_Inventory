@@ -12,6 +12,7 @@ class UTextBlock;
 class UButton;
 class UEditableTextBox;
 class Uswitchingwidget;
+class AC_InventoryCharacter;
 /**
  * 
  */
@@ -66,5 +67,6 @@ protected:
 
 	UFUNCTION()
 	void OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod);
+
 
 };

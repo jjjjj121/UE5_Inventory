@@ -93,7 +93,7 @@ void AShopKeeper::BuyItem(AC_InventoryCharacter* Character, TSubclassOf<AItem> I
 	for (FItemData& Item : Items) {
 		if (Item.ItemClass == ItemSubclass) {
 			--Item.StackCount;
-			Character->RemoveGold(Item.ItemCost);
+			Character->UpdateGold(-Item.ItemCost, false);
 			/*아이템을 모두 소모했을 경우*/
 			if (Item.StackCount <= 0) {
 				Items.RemoveAt(Index);

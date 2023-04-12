@@ -24,18 +24,22 @@ void UInventory::NativeConstruct()
 
 void UInventory::OnClickGold()
 {
-
-	ETB_Gold->SetVisibility(ESlateVisibility::Visible);
-
-	if(APlayerController* Controller = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))) {
-		ETB_Gold->SetUserFocus(Controller);
+	
+	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+		if (Character->bRunningTrade) {
+			ETB_Gold->SetVisibility(ESlateVisibility::Visible);
+			if (APlayerController* Controller = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))) {
+				ETB_Gold->SetUserFocus(Controller);
+			}
+		}
 	}
 }
+
+
 
 void UInventory::OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod)
 {
 	if (CommitMethod == ETextCommit::OnEnter) {
-		//UE_LOG(LogTemp, Warning, TEXT("ON TEXT COMMIT : %s"), *Text.ToString());
 		if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
 			int32 TradeValue = FCString::Atof(*Text.ToString());
 			Character->GetGold() > TradeValue ? TradeValue : TradeValue = Character->GetGold();
@@ -44,15 +48,21 @@ void UInventory::OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod)
 			GoldData.ItemClass = AGold::StaticClass();
 			GoldData.StackCount = TradeValue;
 
-			Character->RemoveGold(TradeValue);
-			Character->AddInventoryItem(GoldData, false);
+			Character->UpdateGold(-TradeValue, false);
+			Character->UpdateGold(TradeValue, true);
+			if (ParentWidget->TradeCharacter->HasAuthority()) {
+				ParentWidget->TradeCharacter->SetUserTradeGold(Character->GetTradeGold());
+			}
+			else {
+				Character->ClientSetUserTradeGold(Character->GetTradeGold() + TradeValue);
+			}
 
 			ETB_Gold->SetText(FText::FromString(FString::Printf(TEXT(""))));
 			ETB_Gold->SetVisibility(ESlateVisibility::Collapsed);
-			
+
 		}
 	}
-	
+
 }
 
 UUniformGridPanel* UInventory::GetGrid_Inventory()
@@ -102,7 +112,6 @@ void UInventory::AddItem(FItemData ItemData)
 	for (auto Child : AllChildren) {
 		if (UInventorySlot* InventorySlot = Cast<UInventorySlot>(Child)) {
 			if (!InventorySlot->ItemData.ItemClass) {
-				UE_LOG(LogTemp, Warning, TEXT("ItemClass Is Null"));
 				InventorySlot->UpdateItem(ItemData);
 				++TotalInventoryNum;
 				break;

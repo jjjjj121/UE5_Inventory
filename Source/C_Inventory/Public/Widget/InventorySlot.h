@@ -42,7 +42,7 @@ public:
 
 	UTradeWidget* TradeWidget;
 	bool IsMyTradeItem = false;
-	bool IsUserTradeItem = false;
+
 public:
 
 	UTextBlock* GetItemText();

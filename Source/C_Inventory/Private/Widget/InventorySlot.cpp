@@ -11,6 +11,7 @@
 #include "C_Inventory/Public/Widget/SlotDragOperation.h"
 #include "C_Inventory/Public/Actors/Item.h"
 
+
 UTextBlock* UInventorySlot::GetItemText()
 {
 	return TB_Stack;
@@ -29,11 +30,11 @@ void UInventorySlot::NativeConstruct()
 FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FReply Reply = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-	
+
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 		//UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE BUTTON! : %d"), IsShopItem);
 		/*드레그 했는지 감지*/
-		Reply.DetectDrag(TakeWidget(),EKeys::LeftMouseButton);
+		Reply.DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
 	}
 
 	return Reply;
@@ -42,14 +43,13 @@ FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, cons
 FReply UInventorySlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FReply Reply = Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
-	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 
-		//UE_LOG(LogTemp, Warning, TEXT("LEFT MOUSE Up! : %d"), IsShopItem);
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 		if (AC_InventoryCharacter* PlayerCharacter = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
 			PlayerCharacter->UseItem(ItemData.ItemClass, ShopKeeper, IsShopItem, IsMyTradeItem);
 		}
 	}
-	
+
 
 	return Reply;
 }
@@ -84,15 +84,15 @@ void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
 
 bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	Super::NativeOnDrop(InGeometry, InDragDropEvent,InOperation);
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
 	UE_LOG(LogTemp, Warning, TEXT("On Drop!"));
 
 	USlotDragOperation* DropItemOperation = Cast<USlotDragOperation>(InOperation);
 	if (DropItemOperation) {
-		
+
 		UInventorySlot* DroppedItem = Cast<UInventorySlot>(DropItemOperation->Payload);
 		if (DroppedItem) {
-			
+
 			FItemData TempData = DroppedItem->ItemData;
 			DroppedItem->UpdateItem(ItemData);
 			UpdateItem(TempData);
@@ -119,14 +119,14 @@ void UInventorySlot::UpdateItem(FItemData NewItemData)
 	}
 
 	DisableButton();
-	
+
 }
 
 void UInventorySlot::EnableButton()
 {
 	Img_Item->SetBrushFromTexture(ItemData.ItemImage);
 	Img_Item->SetOpacity(1);
-	
+
 }
 
 void UInventorySlot::DisableButton()

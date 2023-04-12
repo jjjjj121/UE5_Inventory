@@ -96,7 +96,7 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);
 	W_NotificationTrade->InitWidget();
 
-	W_TradeWidget->TradeCharacter = TradeUser;
+	TradeCharacter = TradeUser;
 	W_TradeWidget->SetVisibility(ESlateVisibility::Visible);
 
 	SwitchingUI(true);
@@ -106,7 +106,7 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 void Uswitchingwidget::EndTrade()
 {
 	
-	W_TradeWidget->TradeCharacter = nullptr;
+	TradeCharacter = nullptr;
 	W_TradeWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);
@@ -116,9 +116,9 @@ void Uswitchingwidget::EndTrade()
 
 }
 
-void Uswitchingwidget::UpdateTradeGold(int32 TradeGold)
+void Uswitchingwidget::UpdateTradeGold(int32 TradeGold, bool IsMyTradeSlot)
 {
-	W_TradeWidget->UpdateGold(TradeGold);
+	W_TradeWidget->UpdateGold(TradeGold, IsMyTradeSlot);
 }
 
 

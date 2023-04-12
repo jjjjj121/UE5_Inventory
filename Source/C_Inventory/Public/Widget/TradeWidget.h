@@ -12,6 +12,7 @@ class UTextBlock;
 class UButton;
 class AC_InventoryCharacter;
 class Uswitchingwidget;
+class UEditableTextBox;
 /**
  * 
  */
@@ -36,6 +37,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
 	UButton* BT_Close;
 
+	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
+	UButton* BT_Gold;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory", meta = (BindWidget))
+	UEditableTextBox* ETB_Gold;
+
 	UPROPERTY(EditAnywhere, Category = "Widget")
 	TSubclassOf<UUserWidget> SlotWidgetClass;
 
@@ -47,6 +54,8 @@ public:
 	UTextBlock* GetTB_UserTradeGold();
 	UTextBlock* GetTB_MyTradeGold();
 	UButton* GetBT_Close();
+	UButton* GetBT_Gold();
+	UEditableTextBox* GetETB_Gold();
 
 
 
@@ -55,26 +64,34 @@ protected:
 
 public:
 	void InitInventory();
-	void AddItem(FItemData ItemData);
-	void Update(TArray<FItemData> Items);
-	void RemoveItem(TArray<FItemData> Items);
-	bool IsNewItem(TArray<FItemData> Items);
-	void UpdateGold(int32 Gold);
+	void AddItem(FItemData ItemData, bool IsMyTradeSlot = true);
+	void Update(TArray<FItemData> Items, bool IsMyTradeSlot = true);
+	void RemoveItem(TArray<FItemData> Items, bool IsMyTradeSlot = true);
+	bool IsNewItem(TArray<FItemData> Items, bool IsMyTradeSlot = true);
+	void UpdateGold(int32 Gold, bool IsMyTradeSlot);
+	void ResetWidget();
 	
 
 protected:
 	int32 CurrentRow = 0;
 	int32 CurrentColumn = 0;
-	int32 TotalInventoryNum = 0;
+	int32 TotalMyInventoryNum = 0;
+	int32 TotalUserInventoryNum = 0;
 	int32 AmountofGrid = 14;
-	
-	int32 TradeGold = 0;
+
+	int32 UserGold = 0;
+	int32 MyGold = 0;
 
 public:
 	UFUNCTION()
 	void CloseWidget();
 
+	UFUNCTION()
+	void OnClickGold();
 
-public:
-	AC_InventoryCharacter* TradeCharacter;
+	UFUNCTION()
+	void OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod);
+
+
+
 };

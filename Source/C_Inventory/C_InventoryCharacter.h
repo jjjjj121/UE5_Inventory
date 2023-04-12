@@ -100,7 +100,15 @@ protected:
 	UFUNCTION()
 	void OnRep_TradeItems();
 
-	void AddItemAndUpdateTradeWidget(FItemData ItemData, const TArray<FItemData>& NewTradeWidgetItems = TArray<FItemData>());
+	void User_TradeItem(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
+
+	UFUNCTION(Server, Reliable)
+	void Server_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
+
+	void AddItemAndUpdateTradeWidget(FItemData ItemData, const TArray<FItemData>& NewTradeWidgetItems = TArray<FItemData>(), bool IsMyTradeSlot = true);
 
 public:
 
@@ -142,7 +150,11 @@ public:
 		int32 GetGold();
 
 	UFUNCTION(BlueprintCallable)
-		void RemoveGold(int32 RemoveValue);
+		int32 GetTradeGold();
+
+	UFUNCTION(Server, Reliable)
+		void Server_UpdateGold(int32 GoldValue, bool IsMyGold);
+
 
 public:
 	/*Test Widget*/
@@ -162,6 +174,8 @@ public:
 	void AddHealth(float Value);
 	void RemoveHunger(float Value);
 
+	void UpdateGold(int32 GoldValue, bool IsMyGold);
+
 	void TryTrade(AC_InventoryCharacter* Character);
 	void ClientTryTrade(AC_InventoryCharacter* TradeUser);
 	void OnTrade(AC_InventoryCharacter* TradeUser);
@@ -170,6 +184,9 @@ public:
 
 	void SetWantTrade(bool NewValue);
 	void SetRunningTrade(bool NewValue);
+
+	void SetUserTradeGold(int32 GoldValue);
+	void ClientSetUserTradeGold(int32 GoldValue);
 public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -195,6 +212,17 @@ public:
 
 	UFUNCTION(Client, Reliable, WithValidation)
 		void Client_EndTrade();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetUserTradeGold(int32 GoldValue);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_AddInventoryItem(FItemData ItemData, bool IsInventoryItem = true);
+
+	UFUNCTION(Server, Reliable)
+	void Server_ClientSetUserTradeGold(AC_InventoryCharacter* NewTradeCharacter,int32 GoldValue);
+
+	
 private:
 	/*ID 만들 경우*/
 	//UPROPERTY(BlueprintReadOnly)
@@ -207,6 +235,8 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		bool bRunningTrade = false;
+
+	AC_InventoryCharacter* TradeCharacter;
 
 };
 

@@ -43,8 +43,11 @@ void AItem::Use(AC_InventoryCharacter* Character, bool IsInShop, bool IsInTradeW
 {
 	if (Character) {
 		/*Shop 아이템 일 경우 물건을 사는 것이기 때문에 인벤토리에 아이템 추가*/
+		if (IsInShop) {
+			Character->AddInventoryItem(ItemData);
+		}
 		/*TradeWidget -> Inventory 인 경우*/
-		if (IsInShop || IsInTradeWIdget) {
+		else if (IsInTradeWIdget) {
 			Character->AddInventoryItem(ItemData);
 		}
 

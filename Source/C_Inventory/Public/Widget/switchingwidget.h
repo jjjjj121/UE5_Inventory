@@ -65,10 +65,11 @@ public:
 	void OnTrade(AC_InventoryCharacter* TradeUser);
 	void EndTrade();
 
-	void UpdateTradeGold(int32 TradeGold);
+	void UpdateTradeGold(int32 TradeGold, bool IsMyTradeSlot = true);
 
 protected:
 	virtual void NativeConstruct() override;
 
-	
+public:
+	AC_InventoryCharacter* TradeCharacter;
 };

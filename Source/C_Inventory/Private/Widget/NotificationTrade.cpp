@@ -59,7 +59,7 @@ void UNotificationTrade::InitWidget()
 
 void UNotificationTrade::ClickedYes()
 {
-	
+
 	/*신청 거는 경우*/
 	if (TradeUser) {
 		BT_Yes->SetVisibility(ESlateVisibility::Collapsed);
@@ -71,7 +71,7 @@ void UNotificationTrade::ClickedYes()
 
 		/*Trade 신청*/
 		if (AC_InventoryCharacter* OwnCharacter = Cast<AC_InventoryCharacter>(this->GetOwningPlayer()->GetCharacter())) {
-			
+
 			OwnCharacter->SetWantTrade(true);
 			/*Client의 경우 본인 캐릭터를 제외한 캐릭터는 컨트롤러를 가지고 있지 않기 때문에 모든 컨트롤러를 가지고 있는
 			서버에서 TryTrade를 호출해야 RPC 함수가 호출이 가능함 -> 따라서 Client에서는 로컬이 아닌 서버에서 TryTrade가 호출되도록 하는 과정이 필요*/
@@ -81,7 +81,7 @@ void UNotificationTrade::ClickedYes()
 			else {
 				OwnCharacter->ClientTryTrade(TradeUser);
 			}
-	
+
 		}
 
 		else {
@@ -122,32 +122,23 @@ void UNotificationTrade::ClickedNo()
 
 void UNotificationTrade::TradeRequest(AC_InventoryCharacter* Character)
 {
-	
+
 	if (Character) {
 		if (AC_InventoryCharacter* Owner = Cast<AC_InventoryCharacter>(this->GetOwningPlayer()->GetCharacter())) {
-			//UE_LOG(LogTemp, Warning, TEXT("Owner : %d"), Owner->WantTrade);
-			//UE_LOG(LogTemp, Warning, TEXT("Trade USer : %d"), Character->WantTrade);
+			TradeUser = Character;
+			TB_MainText->SetText(FText::FromString(TEXT("Would you Trade?")));
+			this->SetVisibility(ESlateVisibility::Visible);
 
-			if (Owner->WantTrade && Character->WantTrade) {
-				if (ParentWidget) {
-					UE_LOG(LogTemp, Warning, TEXT("Trade Start"));
-				}
-			}
-			else {
-				TradeUser = Character;
-				TB_MainText->SetText(FText::FromString(TEXT("Would you Trade?")));
-				this->SetVisibility(ESlateVisibility::Visible);
-			}
 		}
 	}
-	
+
 
 }
 
 void UNotificationTrade::SetMainText()
 {
 	if (TradeUser) {
-		
+
 		/*ID 만들 경우 Text Format 설정*/
 		//FText Text = FText::Format(LOCTEXT("Comment", "Would you Trade for {0} ?"),FText::FromString(TradeUser->UserID));
 		//TB_MainText->SetText(Text);
