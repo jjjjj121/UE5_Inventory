@@ -13,6 +13,7 @@ class UButton;
 class AC_InventoryCharacter;
 class Uswitchingwidget;
 class UEditableTextBox;
+class UImage;
 /**
  * 
  */
@@ -38,7 +39,16 @@ public:
 	UButton* BT_Close;
 
 	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
+	UButton* BT_Accept;
+
+	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
 	UButton* BT_Gold;
+
+	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
+	UImage* User_AcceptEffect;
+
+	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
+	UImage* My_AcceptEffect;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory", meta = (BindWidget))
 	UEditableTextBox* ETB_Gold;
@@ -56,8 +66,9 @@ public:
 	UButton* GetBT_Close();
 	UButton* GetBT_Gold();
 	UEditableTextBox* GetETB_Gold();
-
-
+	UImage* GetUser_AcceptEffect();
+	UImage* GetMy_AcceptEffect();
+	UButton* GetBT_Accept();
 
 protected:
 	virtual void NativeConstruct() override;
@@ -71,6 +82,8 @@ public:
 	void UpdateGold(int32 Gold, bool IsMyTradeSlot);
 	void ResetWidget();
 	
+	void SetAcceptTrade();
+	TArray<FItemData> GetTradeData(bool IsMyTradeData);
 
 protected:
 	int32 CurrentRow = 0;
@@ -88,6 +101,9 @@ public:
 
 	UFUNCTION()
 	void OnClickGold();
+
+	UFUNCTION()
+	void OnClickAccept();
 
 	UFUNCTION()
 	void OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod);

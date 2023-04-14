@@ -44,6 +44,7 @@ public:
 	UTextBlock* GetTB_Gold();
 	UButton* GetBT_Gold();
 	UEditableTextBox* GetETB_Gold();
+	int32 GetTotalInventoryNum();
 
 public:
 	void InitInventory();
@@ -52,6 +53,7 @@ public:
 	void RemoveItem(TArray<FItemData> Items);
 	bool IsNewItem(TArray<FItemData> Items);
 	void UpdateGold(int32 Gold);
+
 
 protected:
 	int32 CurrentRow =0;

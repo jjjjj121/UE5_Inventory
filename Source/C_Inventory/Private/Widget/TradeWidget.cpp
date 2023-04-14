@@ -12,6 +12,7 @@
 #include "Components/EditableTextBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "C_Inventory/Public/Actors/Gold.h"
+#include "Components/Image.h"
 
 
 UUniformGridPanel* UTradeWidget::GetGrid_UserTrade()
@@ -49,12 +50,28 @@ UEditableTextBox* UTradeWidget::GetETB_Gold()
 	return ETB_Gold;
 }
 
+UImage* UTradeWidget::GetUser_AcceptEffect()
+{
+	return User_AcceptEffect;
+}
+
+UImage* UTradeWidget::GetMy_AcceptEffect()
+{
+	return My_AcceptEffect;
+}
+
+UButton* UTradeWidget::GetBT_Accept()
+{
+	return BT_Accept;
+}
+
 void UTradeWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 	BT_Close->OnClicked.AddDynamic(this, &UTradeWidget::CloseWidget);
 	BT_Gold->OnClicked.AddDynamic(this, &UTradeWidget::OnClickGold);
 	ETB_Gold->OnTextCommitted.AddDynamic(this, &UTradeWidget::OnTextCommit);
+	BT_Accept->OnClicked.AddDynamic(this, &UTradeWidget::OnClickAccept);
     InitInventory();
 
 }
@@ -184,27 +201,60 @@ void UTradeWidget::ResetWidget()
 		}
 	}
 
+	TotalMyInventoryNum = 0, TotalUserInventoryNum = 0;
+
 	UpdateGold(0, true);
 	UpdateGold(0, false);
+
+	My_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
+	User_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
+
+
+}
+
+void UTradeWidget::SetAcceptTrade()
+{
+	User_AcceptEffect->SetVisibility(ESlateVisibility::Visible);
+}
+
+TArray<FItemData> UTradeWidget::GetTradeData(bool IsMyTradeData)
+{
+	auto Children = IsMyTradeData ? Grid_MyTrade->GetAllChildren() : Grid_UserTrade->GetAllChildren();
+	TArray<FItemData> TradeItems;
+	/*Item -> Inventory*/
+	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+		for (auto Child : Children) {
+			if (UInventorySlot* InventorySlot = Cast<UInventorySlot>(Child)) {
+				if (InventorySlot->ItemData.ItemClass) {
+					TradeItems.Add(InventorySlot->ItemData);
+				}
+			}
+		}
+	}
+
+	/*Gold Data*/
+	FItemData GoldData;
+	GoldData.ItemClass = AGold::StaticClass();
+	GoldData.StackCount = IsMyTradeData ? MyGold : UserGold;
+	
+	TradeItems.Add(GoldData);
+
+	return TradeItems;
 }
 
 void UTradeWidget::CloseWidget()
 {
-	this->SetVisibility(ESlateVisibility::Collapsed);
-	if (ParentWidget) {
-		ParentWidget->SwitchingUI(false);
-	}
-	if (AC_InventoryCharacter* OwnCharacter = Cast<AC_InventoryCharacter>(this->GetOwningPlayer()->GetCharacter())) {
-		OwnCharacter->SetWantTrade(false);
-		if (ParentWidget->TradeCharacter->HasAuthority()) {
-			ParentWidget->TradeCharacter->EndTrade();
-		}
-		else {
-			OwnCharacter->EndTrade(ParentWidget->TradeCharacter);
-		}
+	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(this->GetOwningPlayer()->GetCharacter())) {
+
+		Character->EndTrade(GetTradeData(true));
+		Character->UserEndTrade();
+
+		/*Reset Widget*/
+		Character->TradeReset();
+		Character->UserTradeReset();
+
 	}
 	
-
 }
 
 void UTradeWidget::OnClickGold()
@@ -220,6 +270,34 @@ void UTradeWidget::OnClickGold()
 	}
 }
 
+void UTradeWidget::OnClickAccept()
+{
+	My_AcceptEffect->SetVisibility(ESlateVisibility::Visible);
+
+	/*상대가 이미 수락상태인 경우 -> 거래실행*/
+	if (User_AcceptEffect->IsVisible()) {
+		/*Item -> Inventory*/
+		if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+			
+			/*Update My Items & Gold*/
+			Character->SucceedTrade(GetTradeData(false));
+			/*Update User Items & Gold*/
+			Character->UserSucceedTrade();
+
+			/*Reset Widget*/
+			Character->TradeReset();
+			Character->UserTradeReset();
+		}
+	}
+	else {
+		if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+
+			Character->UserSetAcceptTrade();
+		}
+	}
+
+}
+
 void UTradeWidget::OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod)
 {
 	if (CommitMethod == ETextCommit::OnEnter) {
@@ -232,16 +310,12 @@ void UTradeWidget::OnTextCommit(const FText& Text, ETextCommit::Type CommitMetho
 			GoldData.ItemClass = AGold::StaticClass();
 			GoldData.StackCount = TradeValue;
 
+			/*My Trade Widget Update(Gold)*/
 			Character->UpdateGold(-TradeValue, true);
 			Character->UpdateGold(TradeValue, false);
 
-			if (ParentWidget->TradeCharacter->HasAuthority()) {
-				ParentWidget->TradeCharacter->SetUserTradeGold(Character->GetTradeGold());
-			}
-			else {
-				Character->ClientSetUserTradeGold(Character->GetTradeGold() - TradeValue);
-			}
-			
+			/*User Trade Widget Update(Gold)*/
+			Character->UserSetUserTradeGold(Character->GetTradeGold() - TradeValue);
 			
 			ETB_Gold->SetText(FText::FromString(FString::Printf(TEXT(""))));
 			ETB_Gold->SetVisibility(ESlateVisibility::Collapsed);

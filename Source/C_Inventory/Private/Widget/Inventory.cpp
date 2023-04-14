@@ -48,14 +48,12 @@ void UInventory::OnTextCommit(const FText& Text, ETextCommit::Type CommitMethod)
 			GoldData.ItemClass = AGold::StaticClass();
 			GoldData.StackCount = TradeValue;
 
+			/*My Trade Widget Update(Gold)*/
 			Character->UpdateGold(-TradeValue, false);
 			Character->UpdateGold(TradeValue, true);
-			if (ParentWidget->TradeCharacter->HasAuthority()) {
-				ParentWidget->TradeCharacter->SetUserTradeGold(Character->GetTradeGold());
-			}
-			else {
-				Character->ClientSetUserTradeGold(Character->GetTradeGold() + TradeValue);
-			}
+
+			/*User Trade Widget Update(Gold)*/
+			Character->UserSetUserTradeGold(Character->GetTradeGold() + TradeValue);
 
 			ETB_Gold->SetText(FText::FromString(FString::Printf(TEXT(""))));
 			ETB_Gold->SetVisibility(ESlateVisibility::Collapsed);
@@ -83,6 +81,11 @@ UButton* UInventory::GetBT_Gold()
 UEditableTextBox* UInventory::GetETB_Gold()
 {
 	return ETB_Gold;
+}
+
+int32 UInventory::GetTotalInventoryNum()
+{
+	return TotalInventoryNum;
 }
 
 void UInventory::InitInventory()

@@ -95,18 +95,18 @@ protected:
 		void OnRep_InventoryItems();
 
 	UPROPERTY(ReplicatedUsing = OnRep_TradeItems, BlueprintReadWrite, Category = "Property")
-	TArray<FItemData> TradeItems;
+		TArray<FItemData> TradeItems;
 
 	UFUNCTION()
-	void OnRep_TradeItems();
+		void OnRep_TradeItems();
 
 	void User_TradeItem(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multi_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
+		void Multi_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
 
 	UFUNCTION(Server, Reliable)
-	void Server_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
+		void Server_User_TradeItems(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot = false);
 
 	void AddItemAndUpdateTradeWidget(FItemData ItemData, const TArray<FItemData>& NewTradeWidgetItems = TArray<FItemData>(), bool IsMyTradeSlot = true);
 
@@ -176,27 +176,40 @@ public:
 
 	void UpdateGold(int32 GoldValue, bool IsMyGold);
 
+	void TryTrade();
 	void TryTrade(AC_InventoryCharacter* Character);
-	void ClientTryTrade(AC_InventoryCharacter* TradeUser);
+	void UserTryTrade();
 	void OnTrade(AC_InventoryCharacter* TradeUser);
+
 	void EndTrade();
-	void EndTrade(AC_InventoryCharacter* TradeUser);
+	void EndTrade(TArray<FItemData> SucceedTradeItems);
+	void UserEndTrade();
 
 	void SetWantTrade(bool NewValue);
 	void SetRunningTrade(bool NewValue);
 
 	void SetUserTradeGold(int32 GoldValue);
-	void ClientSetUserTradeGold(int32 GoldValue);
+	void UserSetUserTradeGold(int32 GoldValue);
+
+	void SetAcceptTrade();
+	void UserSetAcceptTrade();
+
+	void SucceedTrade();
+	void SucceedTrade(TArray<FItemData> SucceedTradeItems);
+	void UserSucceedTrade();
+
+	void TradeReset();
+	void UserTradeReset();
 public:
 
-	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_TryTrade(AC_InventoryCharacter* Character);
+	UFUNCTION(Server, Reliable)
+		void Server_TryTrade(AC_InventoryCharacter* TradeUser);
 
-	UFUNCTION(NetMulticast, Reliable, WithValidation)
-		void Multicast_TryTrade(AC_InventoryCharacter* Character);
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_TryTrade(AC_InventoryCharacter* TradeUser);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_ClientTryTrade(AC_InventoryCharacter* TradeUser);
+	UFUNCTION(Server, Reliable)
+		void Server_UserTryTrade(AC_InventoryCharacter* TradeUser);
 
 	UFUNCTION(Server, Reliable)
 		void Server_SetWantTrade(bool NewValue);
@@ -207,22 +220,44 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation)
 		void Client_OnTrade(AC_InventoryCharacter* TradeUser);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-		void Server_EndTrade(AC_InventoryCharacter* TradeUser);
-
-	UFUNCTION(Client, Reliable, WithValidation)
-		void Client_EndTrade();
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_EndTrade();
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_SetUserTradeGold(int32 GoldValue);
+		void Multicast_SetUserTradeGold(int32 GoldValue);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_AddInventoryItem(FItemData ItemData, bool IsInventoryItem = true);
+		void Server_AddInventoryItem(FItemData ItemData, bool IsInventoryItem = true);
 
 	UFUNCTION(Server, Reliable)
-	void Server_ClientSetUserTradeGold(AC_InventoryCharacter* NewTradeCharacter,int32 GoldValue);
+		void Server_UserSetUserTradeGold(AC_InventoryCharacter* NewTradeCharacter, int32 GoldValue);
 
-	
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_SetAcceptTrade();
+
+	UFUNCTION(Server, Reliable)
+		void Server_UserSetAcceptTrade(AC_InventoryCharacter* NewTradeCharacter);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_SucceedTrade();
+
+	UFUNCTION(Server, Reliable)
+		void Server_UserSucceedTrade(AC_InventoryCharacter* NewTradeCharacter);
+
+	UFUNCTION(Server, Reliable)
+		void Server_TradeReset();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_TradeReset();
+
+	UFUNCTION(Server, Reliable)
+		void Server_UserTradeReset(AC_InventoryCharacter* NewTradeCharacter);
+
+	UFUNCTION(Server, Reliable)
+		void Server_UserEndTrade(AC_InventoryCharacter* NewTradeCharacter);
+
+
+
 private:
 	/*ID 만들 경우*/
 	//UPROPERTY(BlueprintReadOnly)

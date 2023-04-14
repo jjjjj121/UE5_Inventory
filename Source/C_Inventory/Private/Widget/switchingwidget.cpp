@@ -80,8 +80,8 @@ void Uswitchingwidget::OpenShopUI()
 void Uswitchingwidget::TradeRequest(AC_InventoryCharacter* Character)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Server : %d"), Character->WantTrade);
-
 	if (W_NotificationTrade) {
+		TradeCharacter = Character;
 		W_NotificationTrade->TradeRequest(Character);
 		
 		GameandUIMode();
@@ -96,7 +96,6 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);
 	W_NotificationTrade->InitWidget();
 
-	TradeCharacter = TradeUser;
 	W_TradeWidget->SetVisibility(ESlateVisibility::Visible);
 
 	SwitchingUI(true);
@@ -106,7 +105,7 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 void Uswitchingwidget::EndTrade()
 {
 	
-	TradeCharacter = nullptr;
+	//TradeCharacter = nullptr;
 	W_TradeWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);

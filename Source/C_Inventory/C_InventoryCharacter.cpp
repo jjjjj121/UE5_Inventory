@@ -19,6 +19,7 @@
 #include "C_Inventory/Public/Widget/Inventory.h"
 #include "C_Inventory/Public/Widget/Shop.h"
 #include "C_Inventory/Public/Widget/TradeWidget.h"
+#include "C_Inventory/Public/Actors/Food.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -128,85 +129,79 @@ int32 AC_InventoryCharacter::GetTradeGold()
 
 void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData, bool IsInventoryItem)
 {
-	if (HasAuthority()) {
-		UE_LOG(LogTemp, Warning, TEXT("3"));
-		/*Inventory*/
-		if (IsInventoryItem) {
-			bool bIsNewItem = true;
-			/*아이템이 골드일 경우*/
-			if (ItemData.ItemClass == AGold::StaticClass()) {
-				MyGold += ItemData.StackCount;
-				bIsNewItem = false;
-			}
-			/*골드 제외 아이템일 경우*/
-			else {
-				for (FItemData& Item : InventoryItems) {
-					if (Item.ItemClass == ItemData.ItemClass) {
-						if (ItemData.StackCount > 1) {
-							Item.StackCount += ItemData.StackCount;
-						}
-						else {
-							++Item.StackCount;
-						}
 
-						bIsNewItem = false;
-						break;
+	/*Inventory*/
+	if (IsInventoryItem) {
+		bool bIsNewItem = true;
+		/*아이템이 골드일 경우*/
+		if (ItemData.ItemClass == AGold::StaticClass()) {
+			MyGold += ItemData.StackCount;
+			bIsNewItem = false;
+		}
+		/*골드 제외 아이템일 경우*/
+		else {
+			for (FItemData& Item : InventoryItems) {
+				if (Item.ItemClass == ItemData.ItemClass) {
+					if (ItemData.StackCount > 1) {
+						Item.StackCount += ItemData.StackCount;
 					}
+					else {
+						++Item.StackCount;
+					}
+
+					bIsNewItem = false;
+					break;
 				}
-			}
-			/*인벤토리에 없는 아이템일 경우 새로 추가*/
-			if (bIsNewItem) {
-				InventoryItems.Add(ItemData);
-			}
-			/*로컬일 경우*/
-			if (IsLocallyControlled()) {
-				OnRep_InventoryItems();
 			}
 		}
-		/*TradeWidget*/
-		else {
-			bool bIsNewItem = true;
-			/*아이템이 골드일 경우*/
-			if (ItemData.ItemClass == AGold::StaticClass()) {
-				/*TEST*/
-				UpdateGold(ItemData.StackCount, false);
-
-				TradeGold += ItemData.StackCount;
-				UE_LOG(LogTemp, Warning, TEXT("4"));
-				bIsNewItem = false;
-			}
-			/*골드 제외 아이템일 경우*/
-			else {
-				for (FItemData& Item : TradeItems) {
-					if (Item.ItemClass == ItemData.ItemClass) {
-						if (ItemData.StackCount > 1) {
-							Item.StackCount += ItemData.StackCount;
-						}
-						else {
-							++Item.StackCount;
-						}
-						bIsNewItem = false;
-						break;
-					}
-				}
-			}
-			/*인벤토리에 없는 아이템일 경우 새로 추가*/
-			if (bIsNewItem) {
-				TradeItems.Add(ItemData);
-			}
-			/*로컬일 경우*/
-			if (IsLocallyControlled()) {
-				UE_LOG(LogTemp, Warning, TEXT("5"));
-				OnRep_TradeItems();
-			}
+		/*인벤토리에 없는 아이템일 경우 새로 추가*/
+		if (bIsNewItem) {
+			InventoryItems.Add(ItemData);
+		}
+		/*로컬일 경우*/
+		if (IsLocallyControlled()) {
+			OnRep_InventoryItems();
 		}
 
 	}
+	/*TradeWidget*/
 	else {
-		UE_LOG(LogTemp, Warning, TEXT("1"));
+		bool bIsNewItem = true;
+		/*아이템이 골드일 경우*/
+		if (ItemData.ItemClass == AGold::StaticClass()) {
+			/*TEST*/
+			UpdateGold(ItemData.StackCount, false);
+
+			TradeGold += ItemData.StackCount;
+			bIsNewItem = false;
+		}
+		/*골드 제외 아이템일 경우*/
+		else {
+			for (FItemData& Item : TradeItems) {
+				if (Item.ItemClass == ItemData.ItemClass) {
+					if (ItemData.StackCount > 1) {
+						Item.StackCount += ItemData.StackCount;
+					}
+					else {
+						++Item.StackCount;
+					}
+					bIsNewItem = false;
+					break;
+				}
+			}
+		}
+		/*인벤토리에 없는 아이템일 경우 새로 추가*/
+		if (bIsNewItem) {
+			TradeItems.Add(ItemData);
+		}
+		/*로컬일 경우*/
+		if (IsLocallyControlled()) {
+			OnRep_TradeItems();
+		}
+	}
+	if (!HasAuthority()) {
 		Server_AddInventoryItem(ItemData, IsInventoryItem);
 	}
-
 }
 
 bool AC_InventoryCharacter::Server_AddInventoryItem_Validate(FItemData ItemData, bool IsInventoryItem)
@@ -216,7 +211,6 @@ bool AC_InventoryCharacter::Server_AddInventoryItem_Validate(FItemData ItemData,
 
 void AC_InventoryCharacter::Server_AddInventoryItem_Implementation(FItemData ItemData, bool IsInventoryItem)
 {
-	UE_LOG(LogTemp, Warning, TEXT("2"));
 	AddInventoryItem(ItemData, IsInventoryItem);
 
 }
@@ -389,6 +383,7 @@ void AC_InventoryCharacter::AddItemAndUpdateInventory_Implementation(FItemData I
 
 		/*Item일 경우*/
 		if (HUDWidget->W_Inventory->IsNewItem(NewInventoryItems)) {
+			
 			HUDWidget->W_Inventory->AddItem(ItemData);
 		}
 		else {
@@ -410,6 +405,8 @@ void AC_InventoryCharacter::OnRep_TradeItems()
 
 	}
 }
+
+
 
 void AC_InventoryCharacter::User_TradeItem(const TArray<FItemData>& NewTradeWidgetItems, bool IsMyTradeSlot)
 {
@@ -454,9 +451,11 @@ void AC_InventoryCharacter::AddItemAndUpdateTradeWidget(FItemData ItemData, cons
 		if (HUDWidget->W_TradeWidget->IsNewItem(NewTradeWidgetItems, IsMyTradeSlot)) {
 
 			HUDWidget->W_TradeWidget->AddItem(ItemData, IsMyTradeSlot);
+			UE_LOG(LogTemp, Warning, TEXT("ON REP TRADE ITEMS : New"));
 		}
 		else {
 			HUDWidget->W_TradeWidget->Update(NewTradeWidgetItems, IsMyTradeSlot);
+			UE_LOG(LogTemp, Warning, TEXT("ON REP TRADE ITEMS : Update"));
 		}
 	}
 }
@@ -474,7 +473,7 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 					}
 					uint8 Index = 0;
 					FItemData TempData;
-					
+
 					TArray<FItemData>& MyItems = IsTradeWidgetItem ? TradeItems : InventoryItems;
 
 
@@ -489,15 +488,16 @@ void AC_InventoryCharacter::UseItem(TSubclassOf<AItem> ItemSubclass, AShopKeeper
 						}
 						++Index;
 					}
+					/*Swap Item*/
 					if (TempData.ItemClass) {
 						TempData.StackCount = 1;
 						IsTradeWidgetItem ? AddInventoryItem(TempData) : AddInventoryItem(TempData, false);
-						
+
 					}
 					if (IsLocallyControlled()) {
 						OnRep_InventoryItems();
 						OnRep_TradeItems();
-						
+
 					}
 					if (TradeCharacter) {
 						TradeCharacter->User_TradeItem(TradeItems, false);
@@ -566,7 +566,7 @@ bool AC_InventoryCharacter::Server_UseItem_Validate(TSubclassOf<AItem> ItemSubcl
 
 void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> ItemSubclass, AShopKeeper* ShopKeeper, bool IsShopItem, bool IsTradeWidgetItem)
 {
-	
+
 	if (IsShopItem) {
 		UseItem(ItemSubclass, ShopKeeper, IsShopItem, IsTradeWidgetItem);
 	}
@@ -588,8 +588,6 @@ void AC_InventoryCharacter::Server_UseItem_Implementation(TSubclassOf<AItem> Ite
 		}
 
 	}
-
-
 
 }
 
@@ -687,43 +685,6 @@ void AC_InventoryCharacter::OnTrade(AC_InventoryCharacter* TradeUser)
 
 }
 
-void AC_InventoryCharacter::EndTrade()
-{
-	SetWantTrade(false);
-	SetRunningTrade(false);
-	if (IsLocallyControlled()) {
-		HUDWidget->EndTrade();
-	}
-	else {
-		Client_EndTrade();
-	}
-}
-
-bool AC_InventoryCharacter::Client_EndTrade_Validate()
-{
-	return true;
-}
-
-void AC_InventoryCharacter::Client_EndTrade_Implementation()
-{
-	EndTrade();
-}
-
-void AC_InventoryCharacter::EndTrade(AC_InventoryCharacter* TradeUser)
-{
-	Server_EndTrade(TradeUser);
-}
-
-
-bool AC_InventoryCharacter::Server_EndTrade_Validate(AC_InventoryCharacter* TradeUser)
-{
-	return true;
-}
-void AC_InventoryCharacter::Server_EndTrade_Implementation(AC_InventoryCharacter* TradeUser)
-{
-	TradeUser->EndTrade();
-}
-
 bool AC_InventoryCharacter::Client_OnTrade_Validate(AC_InventoryCharacter* TradeUser)
 {
 	return true;
@@ -734,21 +695,54 @@ void AC_InventoryCharacter::Client_OnTrade_Implementation(AC_InventoryCharacter*
 	OnTrade(TradeUser);
 }
 
-void AC_InventoryCharacter::ClientTryTrade(AC_InventoryCharacter* TradeUser)
-{
-	Server_ClientTryTrade(TradeUser);
-}
 
 
-bool AC_InventoryCharacter::Server_ClientTryTrade_Validate(AC_InventoryCharacter* TradeUser)
+void AC_InventoryCharacter::EndTrade()
 {
-	return true;
+	if (HasAuthority()) {
+		Multicast_EndTrade();
+	}
 }
 
-void AC_InventoryCharacter::Server_ClientTryTrade_Implementation(AC_InventoryCharacter* TradeUser)
+void AC_InventoryCharacter::Multicast_EndTrade_Implementation()
 {
-	TradeUser->TryTrade(this);
+	if (IsLocallyControlled()) {
+		EndTrade(HUDWidget->W_TradeWidget->GetTradeData(true));
+	}
 }
+
+void AC_InventoryCharacter::EndTrade(TArray<FItemData> SucceedTradeItems)
+{
+	/*Trade Widget*/
+	if (bRunningTrade) {
+		/*MyTradeItem -> Inventory*/
+		for (auto NewItem : SucceedTradeItems) {
+			AddInventoryItem(NewItem);
+		}
+	}
+	/*Setting Reset*/
+	SetWantTrade(false);
+	SetRunningTrade(false);
+	HUDWidget->EndTrade();
+
+}
+
+void AC_InventoryCharacter::UserEndTrade()
+{
+	if (HasAuthority()) {
+		TradeCharacter->EndTrade();
+	}
+	else {
+		Server_UserEndTrade(HUDWidget->TradeCharacter);
+	}
+
+}
+
+void AC_InventoryCharacter::Server_UserEndTrade_Implementation(AC_InventoryCharacter* NewTradeCharacter)
+{
+	NewTradeCharacter->EndTrade();
+}
+
 
 
 void AC_InventoryCharacter::SetRunningTrade(bool NewValue)
@@ -759,6 +753,11 @@ void AC_InventoryCharacter::SetRunningTrade(bool NewValue)
 	else {
 		Server_SetRunningTrade(NewValue);
 	}
+}
+
+void AC_InventoryCharacter::Server_SetRunningTrade_Implementation(bool NewValue)
+{
+	bRunningTrade = NewValue;
 }
 
 void AC_InventoryCharacter::SetUserTradeGold(int32 GoldValue)
@@ -777,27 +776,153 @@ void AC_InventoryCharacter::Multicast_SetUserTradeGold_Implementation(int32 Gold
 	}
 }
 
-void AC_InventoryCharacter::ClientSetUserTradeGold(int32 GoldValue)
+void AC_InventoryCharacter::UserSetUserTradeGold(int32 GoldValue)
 {
-	if (HUDWidget) {
-		Server_ClientSetUserTradeGold(HUDWidget->TradeCharacter, GoldValue);
+	if (HUDWidget->TradeCharacter->HasAuthority()) {
+		HUDWidget->TradeCharacter->SetUserTradeGold(GetTradeGold());
 	}
-	
+	else {
+		Server_UserSetUserTradeGold(HUDWidget->TradeCharacter, GoldValue);
+	}
+
 }
 
-void AC_InventoryCharacter::Server_ClientSetUserTradeGold_Implementation(AC_InventoryCharacter* NewTradeCharacter, int32 GoldValue)
+void AC_InventoryCharacter::Server_UserSetUserTradeGold_Implementation(AC_InventoryCharacter* NewTradeCharacter, int32 GoldValue)
 {
 	if (NewTradeCharacter) {
 		NewTradeCharacter->SetUserTradeGold(GoldValue);
 	}
-	
+
 }
 
 
-void AC_InventoryCharacter::Server_SetRunningTrade_Implementation(bool NewValue)
+void AC_InventoryCharacter::SetAcceptTrade()
 {
-	bRunningTrade = NewValue;
+	if (HasAuthority()) {
+		Multicast_SetAcceptTrade();
+	}
+
 }
+
+void AC_InventoryCharacter::Multicast_SetAcceptTrade_Implementation()
+{
+	if (IsLocallyControlled()) {
+		if (HUDWidget) {
+			HUDWidget->W_TradeWidget->SetAcceptTrade();
+		}
+	}
+}
+
+
+void AC_InventoryCharacter::UserSetAcceptTrade()
+{
+	if (HUDWidget->TradeCharacter->HasAuthority()) {
+		HUDWidget->TradeCharacter->SetAcceptTrade();
+	}
+	else {
+		Server_UserSetAcceptTrade(HUDWidget->TradeCharacter);
+	}	
+}
+
+
+void AC_InventoryCharacter::Server_UserSetAcceptTrade_Implementation(AC_InventoryCharacter* NewTradeCharacter)
+{
+	if (NewTradeCharacter) {
+		NewTradeCharacter->SetAcceptTrade();
+	}
+}
+
+void AC_InventoryCharacter::SucceedTrade()
+{
+	if (HasAuthority()) {
+		Multicast_SucceedTrade();
+	}
+}
+
+void AC_InventoryCharacter::Multicast_SucceedTrade_Implementation()
+{
+	if (IsLocallyControlled()) {
+		SucceedTrade(HUDWidget->W_TradeWidget->GetTradeData(false));
+	}
+}
+
+void AC_InventoryCharacter::SucceedTrade(TArray<FItemData> SucceedTradeItems)
+{
+	for (auto NewItem : SucceedTradeItems) {
+		AddInventoryItem(NewItem);
+	}
+
+	/*Setting Reset*/
+	SetWantTrade(false);
+	SetRunningTrade(false);
+	HUDWidget->EndTrade();
+}
+
+void AC_InventoryCharacter::UserSucceedTrade()
+{
+	if (HasAuthority()) {
+		HUDWidget->TradeCharacter->SucceedTrade();
+	}
+	else {
+		Server_UserSucceedTrade(HUDWidget->TradeCharacter);
+	}
+
+}
+
+void AC_InventoryCharacter::Server_UserSucceedTrade_Implementation(AC_InventoryCharacter* NewTradeCharacter)
+{
+	if (NewTradeCharacter) {
+		NewTradeCharacter->SucceedTrade();
+	}
+}
+
+
+
+void AC_InventoryCharacter::TradeReset()
+{
+	if (HasAuthority()) {
+		TradeItems.Empty();
+		TradeGold = 0;
+		UE_LOG(LogTemp, Warning, TEXT("TRADE ITEMS NUM : %d"), TradeItems.Num());
+		Multicast_TradeReset();
+	}
+	else {
+		Server_TradeReset();
+	}
+}
+
+void AC_InventoryCharacter::Server_TradeReset_Implementation()
+{
+	TradeItems.Empty();
+	TradeGold = 0;
+	Multicast_TradeReset();
+}
+
+void AC_InventoryCharacter::Multicast_TradeReset_Implementation()
+{
+	if (IsLocallyControlled()) {
+		HUDWidget->W_TradeWidget->ResetWidget();
+	}
+}
+
+void AC_InventoryCharacter::UserTradeReset()
+{
+	if (HasAuthority()) {
+		HUDWidget->TradeCharacter->TradeReset();
+	}
+	else {
+		Server_UserTradeReset(HUDWidget->TradeCharacter);
+	}
+
+}
+
+void AC_InventoryCharacter::Server_UserTradeReset_Implementation(AC_InventoryCharacter* NewTradeCharacter)
+{
+	if (NewTradeCharacter) {
+		NewTradeCharacter->TradeReset();
+	}
+}
+
 
 void AC_InventoryCharacter::SetWantTrade(bool NewValue)
 {
@@ -814,54 +939,54 @@ void AC_InventoryCharacter::Server_SetWantTrade_Implementation(bool NewValue)
 	WantTrade = NewValue;
 }
 
+
+void AC_InventoryCharacter::Server_TryTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	Multicast_TryTrade(TradeUser);
+}
+
+void AC_InventoryCharacter::Multicast_TryTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	if (IsLocallyControlled()) {
+		HUDWidget->TradeRequest(TradeUser);
+	}
+}
+
+
 void AC_InventoryCharacter::TryTrade(AC_InventoryCharacter* Character)
 {
-	if (WantTrade && Character->WantTrade) {
-		OnTrade(Character);
-		Character->OnTrade(this);
+	TradeCharacter = Character;
 
+	if (WantTrade && TradeCharacter->WantTrade) {
+		OnTrade(TradeCharacter);
+		TradeCharacter->OnTrade(this);
 	}
 	else {
-		/*Server*/
 		if (HasAuthority()) {
-			Multicast_TryTrade(Character);
+			Multicast_TryTrade(TradeCharacter);
 		}
-		/*Client*/
 		else {
-			Server_TryTrade(Character);
+			Server_TryTrade(TradeCharacter);
 		}
 	}
 }
 
-
-bool AC_InventoryCharacter::Multicast_TryTrade_Validate(AC_InventoryCharacter* Character)
+void AC_InventoryCharacter::UserTryTrade()
 {
-	return true;
-}
+	SetWantTrade(true);
 
-void AC_InventoryCharacter::Multicast_TryTrade_Implementation(AC_InventoryCharacter* Character)
-{
-
-	if (IsLocallyControlled()) {
-		if (HUDWidget) {
-			HUDWidget->TradeRequest(Character);
-		}
+	if (HasAuthority()) {
+		TradeCharacter->TryTrade(this);
+	}
+	else {
+		Server_UserTryTrade(HUDWidget->TradeCharacter);
 	}
 }
 
-bool AC_InventoryCharacter::Server_TryTrade_Validate(AC_InventoryCharacter* Character)
+
+void AC_InventoryCharacter::Server_UserTryTrade_Implementation(AC_InventoryCharacter* TradeUser)
 {
-	return true;
+	TradeUser->TryTrade(this);
 }
-
-
-void AC_InventoryCharacter::Server_TryTrade_Implementation(AC_InventoryCharacter* Character)
-{
-	Multicast_TryTrade(Character);
-}
-
-
-
-
 
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "C_Inventory/Public/Structs.h"
 #include "NotificationTrade.generated.h"
 
 class UButton;
