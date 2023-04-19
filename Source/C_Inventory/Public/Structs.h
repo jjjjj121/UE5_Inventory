@@ -21,3 +21,24 @@ public:
 	void SetDefault() { ItemClass = 0, ItemImage = 0, ItemCost = 0, StackCount = 1; };
 };
 
+USTRUCT(BlueprintType)
+struct FSessionData
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString SessionName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Password;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UFindSessionWidget* ParentWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 SessionIndex = 0;
+
+
+};

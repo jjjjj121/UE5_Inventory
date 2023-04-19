@@ -1,0 +1,1 @@
+start "" "C:\Program Files\Epic Games\UE_5.1\Engine\Binaries\Win64\UnrealEditor.exe" "%~dp0\C_Inventory.uproject" -game -ResX=800 -ResY=900 -WinX=0 -WinY=20 -log

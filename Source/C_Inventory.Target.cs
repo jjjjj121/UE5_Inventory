@@ -11,5 +11,7 @@ public class C_InventoryTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("C_Inventory");
+
+		bUsesSteam = true;
 	}
 }
