@@ -21,6 +21,9 @@ public:
 	class UTextBlock* TB_SessionName;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Find Session Widget", meta = (BindWidget))
+	class UTextBlock* TB_Notpassword;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Find Session Widget", meta = (BindWidget))
 	class UEditableTextBox* ETB_Password;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Find Session Widget", meta = (BindWidget))
@@ -32,8 +35,6 @@ public:
 private:
 
 	FSessionData SessionData;
-	//FString Password;
-	//UListData SessionData;
 
 protected:
 	virtual void NativeConstruct() override;

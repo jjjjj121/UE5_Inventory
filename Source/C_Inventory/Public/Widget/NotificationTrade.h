@@ -36,6 +36,9 @@ public:
 	UTextBlock* TB_MainText;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Notify Trade", meta = (BindWidget))
+	UTextBlock* TB_Nickname;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Notify Trade", meta = (BindWidget))
 	UCircularThrobber* CT_LoadingBar;
 	
 	Uswitchingwidget* ParentWidget;
@@ -43,13 +46,6 @@ public:
 protected:
 	AC_InventoryCharacter* TradeUser;
 	
-
-public:
-	UButton* GetBT_Yes();
-	UButton* GetBT_No();
-	UButton* GetBT_Cancel();
-	UTextBlock* GetTB_MainText();
-	UCircularThrobber* GetCT_LoadingBar();
 
 public:
 	
@@ -64,9 +60,6 @@ public:
 	void ClickedNo();
 
 	void TradeRequest(AC_InventoryCharacter* Character);
-
-	/*ID만들경우*/
-	void SetMainText();
 
 
 };

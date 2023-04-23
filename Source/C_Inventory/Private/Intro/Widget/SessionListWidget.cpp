@@ -7,15 +7,7 @@
 #include "Intro/ListData.h"
 #include "Intro/Widget/FindSessionWidget.h"
 
-UButton* USessionListWidget::GetBT_Session()
-{
-	return BT_Session;
-}
 
-UTextBlock* USessionListWidget::GetTB_SessionName()
-{
-	return TB_SessionName;
-}
 
 void USessionListWidget::NativeConstruct()
 {
@@ -30,12 +22,17 @@ void USessionListWidget::SetData(UListData* NewData)
 	SessionData = NewData->GetSessionData();
 
 	SetSessionName(SessionData.SessionName);
-	
+	SetNickName(SessionData.Nickname);
 }
 
 void USessionListWidget::SetSessionName(FString NewSessionName)
 {
 	TB_SessionName->SetText(FText::FromString(NewSessionName));
+}
+
+void USessionListWidget::SetNickName(FString NewNickName)
+{
+	TB_Nickname->SetText(FText::FromString(NewNickName));
 }
 
 void USessionListWidget::OnclickedSession()

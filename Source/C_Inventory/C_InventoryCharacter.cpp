@@ -90,6 +90,7 @@ void AC_InventoryCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+
 	}
 
 	/*Create Widget*/
@@ -116,6 +117,7 @@ void AC_InventoryCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AC_InventoryCharacter, Hunger);
 	DOREPLIFETIME(AC_InventoryCharacter, WantTrade);
 	DOREPLIFETIME(AC_InventoryCharacter, bRunningTrade);
+	DOREPLIFETIME(AC_InventoryCharacter, Nickname);
 }
 
 
@@ -132,91 +134,88 @@ int32 AC_InventoryCharacter::GetTradeGold()
 
 void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData, bool IsInventoryItem)
 {
+	if (HasAuthority()) {
+		/*Inventory*/
+		if (IsInventoryItem) {
+			bool bIsNewItem = true;
+			/*아이템이 골드일 경우*/
+			if (ItemData.ItemClass == AGold::StaticClass()) {
+				MyGold += ItemData.StackCount;
+				bIsNewItem = false;
+			}
+			/*골드 제외 아이템일 경우*/
+			else {
+				for (FItemData& Item : InventoryItems) {
+					if (Item.ItemClass == ItemData.ItemClass) {
+						if (ItemData.StackCount > 1) {
+							Item.StackCount += ItemData.StackCount;
+						}
+						else {
+							++Item.StackCount;
+						}
 
-	/*Inventory*/
-	if (IsInventoryItem) {
-		bool bIsNewItem = true;
-		/*아이템이 골드일 경우*/
-		if (ItemData.ItemClass == AGold::StaticClass()) {
-			MyGold += ItemData.StackCount;
-			bIsNewItem = false;
-		}
-		/*골드 제외 아이템일 경우*/
-		else {
-			for (FItemData& Item : InventoryItems) {
-				if (Item.ItemClass == ItemData.ItemClass) {
-					if (ItemData.StackCount > 1) {
-						Item.StackCount += ItemData.StackCount;
+						bIsNewItem = false;
+						break;
 					}
-					else {
-						++Item.StackCount;
-					}
-
-					bIsNewItem = false;
-					break;
 				}
 			}
-		}
-		/*인벤토리에 없는 아이템일 경우 새로 추가*/
-		if (bIsNewItem) {
-			InventoryItems.Add(ItemData);
-		}
-		/*로컬일 경우*/
-		if (IsLocallyControlled()) {
-			OnRep_InventoryItems();
-		}
+			/*인벤토리에 없는 아이템일 경우 새로 추가*/
+			if (bIsNewItem) {
+				InventoryItems.Add(ItemData);
+			}
+			/*로컬일 경우*/
+			if (IsLocallyControlled()) {
+				OnRep_InventoryItems();
+			}
 
+		}
+		/*TradeWidget*/
+		else {
+			bool bIsNewItem = true;
+			/*아이템이 골드일 경우*/
+			if (ItemData.ItemClass == AGold::StaticClass()) {
+				/*TEST*/
+				UpdateGold(ItemData.StackCount, false);
+
+				TradeGold += ItemData.StackCount;
+				bIsNewItem = false;
+			}
+			/*골드 제외 아이템일 경우*/
+			else {
+				for (FItemData& Item : TradeItems) {
+					if (Item.ItemClass == ItemData.ItemClass) {
+						if (ItemData.StackCount > 1) {
+							Item.StackCount += ItemData.StackCount;
+						}
+						else {
+							++Item.StackCount;
+						}
+						bIsNewItem = false;
+						break;
+					}
+				}
+			}
+			/*인벤토리에 없는 아이템일 경우 새로 추가*/
+			if (bIsNewItem) {
+				TradeItems.Add(ItemData);
+			}
+			/*로컬일 경우*/
+			if (IsLocallyControlled()) {
+				OnRep_TradeItems();
+			}
+		}
 	}
-	/*TradeWidget*/
 	else {
-		bool bIsNewItem = true;
-		/*아이템이 골드일 경우*/
-		if (ItemData.ItemClass == AGold::StaticClass()) {
-			/*TEST*/
-			UpdateGold(ItemData.StackCount, false);
-
-			TradeGold += ItemData.StackCount;
-			bIsNewItem = false;
-		}
-		/*골드 제외 아이템일 경우*/
-		else {
-			for (FItemData& Item : TradeItems) {
-				if (Item.ItemClass == ItemData.ItemClass) {
-					if (ItemData.StackCount > 1) {
-						Item.StackCount += ItemData.StackCount;
-					}
-					else {
-						++Item.StackCount;
-					}
-					bIsNewItem = false;
-					break;
-				}
-			}
-		}
-		/*인벤토리에 없는 아이템일 경우 새로 추가*/
-		if (bIsNewItem) {
-			TradeItems.Add(ItemData);
-		}
-		/*로컬일 경우*/
-		if (IsLocallyControlled()) {
-			OnRep_TradeItems();
-		}
-	}
-	if (!HasAuthority()) {
 		Server_AddInventoryItem(ItemData, IsInventoryItem);
 	}
-}
 
-bool AC_InventoryCharacter::Server_AddInventoryItem_Validate(FItemData ItemData, bool IsInventoryItem)
-{
-	return true;
 }
 
 void AC_InventoryCharacter::Server_AddInventoryItem_Implementation(FItemData ItemData, bool IsInventoryItem)
 {
 	AddInventoryItem(ItemData, IsInventoryItem);
-
 }
+
 void AC_InventoryCharacter::AddHealth(float Value)
 {
 	Health += Value;
@@ -688,11 +687,6 @@ void AC_InventoryCharacter::OnTrade(AC_InventoryCharacter* TradeUser)
 
 }
 
-bool AC_InventoryCharacter::Client_OnTrade_Validate(AC_InventoryCharacter* TradeUser)
-{
-	return true;
-}
-
 void AC_InventoryCharacter::Client_OnTrade_Implementation(AC_InventoryCharacter* TradeUser)
 {
 	OnTrade(TradeUser);
@@ -851,8 +845,8 @@ void AC_InventoryCharacter::Multicast_SucceedTrade_Implementation()
 
 void AC_InventoryCharacter::SucceedTrade(TArray<FItemData> SucceedTradeItems)
 {
-	for (auto NewItem : SucceedTradeItems) {
-		AddInventoryItem(NewItem);
+	for (FItemData NewItem : SucceedTradeItems) {
+		AddInventoryItem(NewItem, true);
 	}
 
 	/*Setting Reset*/
@@ -991,5 +985,4 @@ void AC_InventoryCharacter::Server_UserTryTrade_Implementation(AC_InventoryChara
 {
 	TradeUser->TryTrade(this);
 }
-
 

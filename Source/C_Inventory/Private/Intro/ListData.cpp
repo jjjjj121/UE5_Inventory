@@ -28,6 +28,11 @@ FSessionData UListData::GetSessionData()
 	return SessionData;
 }
 
+FString UListData::GetNickname()
+{
+	return SessionData.Nickname;
+}
+
 void UListData::SetSessionName(FString NewSessionName)
 {
 	SessionData.SessionName = NewSessionName;
@@ -46,4 +51,9 @@ void UListData::SetSessionIndex(int32 NewIndex)
 void UListData::SetParentWidget(UFindSessionWidget* NewParentWidget)
 {
 	SessionData.ParentWidget = NewParentWidget;
+}
+
+void UListData::SetNickname(FString NewNickName)
+{
+	SessionData.Nickname = NewNickName;
 }

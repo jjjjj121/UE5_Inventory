@@ -15,7 +15,7 @@ class AC_InventoryCharacter : public ACharacter
 	GENERATED_BODY()
 
 		/** Camera boom positioning the camera behind the character */
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
@@ -217,7 +217,7 @@ public:
 	UFUNCTION(Server, Reliable)
 		void Server_SetRunningTrade(bool NewValue);
 
-	UFUNCTION(Client, Reliable, WithValidation)
+	UFUNCTION(Client, Reliable)
 		void Client_OnTrade(AC_InventoryCharacter* TradeUser);
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -226,7 +226,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void Multicast_SetUserTradeGold(int32 GoldValue);
 
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 		void Server_AddInventoryItem(FItemData ItemData, bool IsInventoryItem = true);
 
 	UFUNCTION(Server, Reliable)
@@ -257,13 +257,6 @@ public:
 		void Server_UserEndTrade(AC_InventoryCharacter* NewTradeCharacter);
 
 
-
-private:
-	/*ID 만들 경우*/
-	//UPROPERTY(BlueprintReadOnly)
-	//FString UserID;
-
-
 public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		bool WantTrade;
@@ -272,6 +265,9 @@ public:
 		bool bRunningTrade = false;
 
 	AC_InventoryCharacter* TradeCharacter;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FString Nickname{TEXT("TESTNAME")};
 
 };
 

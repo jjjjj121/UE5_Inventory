@@ -7,6 +7,7 @@
 #include "C_Inventory/Public/Structs.h"
 #include "SessionListWidget.generated.h"
 
+class UTextBlock;
 /**
  * 
  */
@@ -20,18 +21,17 @@ public:
 		class UButton* BT_Session;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Find Session Widget", meta = (BindWidget))
-		class UTextBlock* TB_SessionName;
+		UTextBlock* TB_SessionName;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Find Session Widget", meta = (BindWidget))
+		UTextBlock* TB_Nickname;
 
 private:
 	FSessionData SessionData;
 
-public:
-	UButton* GetBT_Session();
-	UTextBlock* GetTB_SessionName();
-
 private:
 	void SetSessionName(FString NewSessionName);
-	
+	void SetNickName(FString NewNickName);
 
 protected:
 	virtual void NativeConstruct() override;

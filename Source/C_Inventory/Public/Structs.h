@@ -40,5 +40,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 SessionIndex = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Nickname {};
+
 
 };

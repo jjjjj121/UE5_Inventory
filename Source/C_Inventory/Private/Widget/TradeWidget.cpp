@@ -15,56 +15,6 @@
 #include "Components/Image.h"
 
 
-UUniformGridPanel* UTradeWidget::GetGrid_UserTrade()
-{
-    return Grid_UserTrade;
-}
-
-UUniformGridPanel* UTradeWidget::GetGrid_MyTrade()
-{
-    return Grid_MyTrade;
-}
-
-UTextBlock* UTradeWidget::GetTB_UserTradeGold()
-{
-    return TB_UserTradeGold;
-}
-
-UTextBlock* UTradeWidget::GetTB_MyTradeGold()
-{
-    return TB_MyTradeGold;
-}
-
-UButton* UTradeWidget::GetBT_Close()
-{
-    return BT_Close;
-}
-
-UButton* UTradeWidget::GetBT_Gold()
-{
-	return BT_Gold;
-}
-
-UEditableTextBox* UTradeWidget::GetETB_Gold()
-{
-	return ETB_Gold;
-}
-
-UImage* UTradeWidget::GetUser_AcceptEffect()
-{
-	return User_AcceptEffect;
-}
-
-UImage* UTradeWidget::GetMy_AcceptEffect()
-{
-	return My_AcceptEffect;
-}
-
-UButton* UTradeWidget::GetBT_Accept()
-{
-	return BT_Accept;
-}
-
 void UTradeWidget::NativeConstruct()
 {
     Super::NativeConstruct();
@@ -206,15 +156,25 @@ void UTradeWidget::ResetWidget()
 	UpdateGold(0, true);
 	UpdateGold(0, false);
 
+	TB_User->SetText(FText::FromString(FString::Printf(TEXT("User"))));
+
 	My_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
 	User_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
 
 
 }
 
+void UTradeWidget::SetUserName()
+{
+	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
+		TB_User->SetText(FText::FromString(Character->TradeCharacter->Nickname));
+	}
+}
+
 void UTradeWidget::SetAcceptTrade()
 {
 	User_AcceptEffect->SetVisibility(ESlateVisibility::Visible);
+
 }
 
 TArray<FItemData> UTradeWidget::GetTradeData(bool IsMyTradeData)

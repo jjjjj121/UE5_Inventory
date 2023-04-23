@@ -25,10 +25,22 @@ void UJoinSessionWidget::OnClickedJoin()
 		if (UC_InventoryGameInstance* GameInstance = Cast<UC_InventoryGameInstance>(GetGameInstance())) {
 			GameInstance->MyJoinSession(SessionData);
 		}
-
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("PASSWORD IS NOT SAME"));
+		TB_Notpassword->SetVisibility(ESlateVisibility::Visible);
+
+		FTimerHandle GravityTimerHandle;
+		float GravityTime = 1.5f;
+		GetWorld()->GetTimerManager().SetTimer(GravityTimerHandle, FTimerDelegate::CreateLambda([&]()
+			{
+				// 코드 구현
+				TB_Notpassword->SetVisibility(ESlateVisibility::Collapsed);
+
+				// TimerHandle 초기화
+				GetWorld()->GetTimerManager().ClearTimer(GravityTimerHandle);
+
+			}), GravityTime, false); //Looping 사용시 true
 	}
 }
 

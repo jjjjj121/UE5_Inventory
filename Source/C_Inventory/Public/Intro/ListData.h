@@ -27,11 +27,13 @@ public:
 	UFindSessionWidget* GetParentWidget();
 	int32 GetSessionIndex();
 	FSessionData GetSessionData();
+	FString GetNickname();
 
 public:
 	void SetSessionName(FString NewSessionName);
 	void SetPassword(FString NewPassword);
 	void SetSessionIndex(int32 NewIndex);
 	void SetParentWidget(UFindSessionWidget* NewParentWidget);
+	void SetNickname(FString NewNickName);
 
 };

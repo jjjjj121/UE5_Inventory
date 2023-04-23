@@ -22,12 +22,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Hudwidget", meta = (BindWidget))
 	UTextBlock* TB_Health;
 
-public:
-
-	UTextBlock* GetTB_Hunger();
-	UTextBlock* GetTB_Health();
+	UPROPERTY(BlueprintReadOnly, Category = "Hudwidget", meta = (BindWidget))
+	UTextBlock* TB_ClientServer;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "HudWidget")
 	void UpdateStats(float Hunger, float Health);
+
+private:
+	virtual void NativeConstruct() override;
 };

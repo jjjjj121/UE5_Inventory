@@ -14,4 +14,8 @@ class C_INVENTORY_API AC_InventoryPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+
+private:
+	virtual void OnPossess(APawn* aPawn) override;
+
 };

@@ -9,32 +9,7 @@
 #include "C_Inventory/C_InventoryCharacter.h"
 #include "Components/TextBlock.h"
 
-#define LOCTEXT_NAMESPACE "NotificationTrade"
 
-UButton* UNotificationTrade::GetBT_Yes()
-{
-	return BT_Yes;
-}
-
-UButton* UNotificationTrade::GetBT_No()
-{
-	return BT_No;
-}
-
-UButton* UNotificationTrade::GetBT_Cancel()
-{
-	return BT_Cancel;
-}
-
-UTextBlock* UNotificationTrade::GetTB_MainText()
-{
-	return TB_MainText;
-}
-
-UCircularThrobber* UNotificationTrade::GetCT_LoadingBar()
-{
-	return CT_LoadingBar;
-}
 
 void UNotificationTrade::NativeConstruct()
 {
@@ -53,7 +28,9 @@ void UNotificationTrade::InitWidget()
 	BT_No->SetVisibility(ESlateVisibility::Visible);
 	BT_Cancel->SetVisibility(ESlateVisibility::Collapsed);
 	CT_LoadingBar->SetVisibility(ESlateVisibility::Collapsed);
-	TB_MainText->SetText(FText::FromString(TEXT("Would you Trade?")));
+	TB_MainText->SetText(FText::FromString(TEXT("Would you like to Trade with")));
+	TB_Nickname->SetText(FText::FromString(TEXT("")));
+
 	TradeUser = nullptr;
 }
 
@@ -75,7 +52,6 @@ void UNotificationTrade::ClickedYes()
 			//서버에서 TryTrade를 호출해야 RPC 함수가 호출이 가능함 -> 따라서 Client에서는 로컬이 아닌 서버에서 TryTrade가 호출되도록 하는 과정이 필요*/
 			OwnCharacter->UserTryTrade();
 		}
-
 		else {
 			UE_LOG(LogTemp, Warning, TEXT("Trade Error"));
 			TB_MainText->SetText(FText::FromString(TEXT("Trade Error")));
@@ -114,24 +90,15 @@ void UNotificationTrade::TradeRequest(AC_InventoryCharacter* Character)
 	if (Character) {
 		if (AC_InventoryCharacter* Owner = Cast<AC_InventoryCharacter>(this->GetOwningPlayer()->GetCharacter())) {
 			TradeUser = Character;
-			TB_MainText->SetText(FText::FromString(TEXT("Would you Trade?")));
+			
+			TB_MainText->SetText(FText::FromString(TEXT("Would you like to Trade with")));
+			TB_Nickname->SetText(FText::FromString(TradeUser->Nickname));
+
 			this->SetVisibility(ESlateVisibility::Visible);
 
 		}
 	}
 
-
 }
 
-void UNotificationTrade::SetMainText()
-{
-	if (TradeUser) {
-
-		/*ID 만들 경우 Text Format 설정*/
-		//FText Text = FText::Format(LOCTEXT("Comment", "Would you Trade for {0} ?"),FText::FromString(TradeUser->UserID));
-		//TB_MainText->SetText(Text);
-	}
-}
-
-#undef LOCTEXT_NAMESPACE
 

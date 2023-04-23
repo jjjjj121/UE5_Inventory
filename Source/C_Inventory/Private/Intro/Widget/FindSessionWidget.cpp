@@ -12,6 +12,8 @@
 void UFindSessionWidget::FindSessionComplete(TArray<FOnlineSessionSearchResult> SessionResults)
 {
 	int32 Index = 0;
+
+	
 	for (FOnlineSessionSearchResult Reuslt : SessionResults) {
 
 		/*Create Object*/
@@ -33,11 +35,15 @@ void UFindSessionWidget::FindSessionComplete(TArray<FOnlineSessionSearchResult> 
 			else if (Key == FName(TEXT("password"))) {
 				SessionData->SetPassword(Value);
 			}
+			else if (Key == FName(TEXT("nickname"))) {
+				SessionData->SetNickname(Value);
+			}
 
 		}
 
 		SessionData->SetParentWidget(this);
 		SessionData->SetSessionIndex(Index);
+		
 		LV_SessionList->AddItem(SessionData);
 
 		++Index;

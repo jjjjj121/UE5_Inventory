@@ -36,6 +36,9 @@ public:
 	UTextBlock* TB_MyTradeGold;
 
 	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
+	UTextBlock* TB_User;
+
+	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
 	UButton* BT_Close;
 
 	UPROPERTY(BlueprintReadOnly, Category = "TradeWidget", meta = (BindWidget))
@@ -57,18 +60,7 @@ public:
 	TSubclassOf<UUserWidget> SlotWidgetClass;
 
 	Uswitchingwidget* ParentWidget;
-public:
 
-	UUniformGridPanel* GetGrid_UserTrade();
-	UUniformGridPanel* GetGrid_MyTrade();
-	UTextBlock* GetTB_UserTradeGold();
-	UTextBlock* GetTB_MyTradeGold();
-	UButton* GetBT_Close();
-	UButton* GetBT_Gold();
-	UEditableTextBox* GetETB_Gold();
-	UImage* GetUser_AcceptEffect();
-	UImage* GetMy_AcceptEffect();
-	UButton* GetBT_Accept();
 
 protected:
 	virtual void NativeConstruct() override;
@@ -81,6 +73,7 @@ public:
 	bool IsNewItem(TArray<FItemData> Items, bool IsMyTradeSlot = true);
 	void UpdateGold(int32 Gold, bool IsMyTradeSlot);
 	void ResetWidget();
+	void SetUserName();
 	
 	void SetAcceptTrade();
 	TArray<FItemData> GetTradeData(bool IsMyTradeData);

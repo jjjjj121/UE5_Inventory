@@ -5,7 +5,7 @@
 #include "OnlineSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Intro/IntroHUD.h"
-
+#include "Gameframework/PlayerState.h"
 
 
 
@@ -114,12 +114,19 @@ void UC_InventoryGameInstance::MyCreateSession(FName NewSessionName, FName Passw
 		SessionSettings.NumPublicConnections = 10;
 		SessionSettings.bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() != "NULL" ? false : true;
 
+		///*TEST*/
+		//SessionSettings.bIsLANMatch = true;
 
 		//~ Custom Session setting.
 		AddExtraSetting(FName(TEXT("sessionname")), MySessionName.ToString(), &SessionSettings);
 		AddExtraSetting(FName(TEXT("password")), MyPassword.ToString(), &SessionSettings);
 
-
+		/*Nickname*/
+		if (APlayerState* MyPlayerState = Cast<APlayerState>(UGameplayStatics::GetPlayerState(GetWorld(), 0))) {
+			FString Nickname = MyPlayerState->GetPlayerName();
+			AddExtraSetting(FName(TEXT("nickname")), Nickname, &SessionSettings);
+		}
+		
 		/*Create Session*/
 		SessionInterface->CreateSession(0, MySessionName, SessionSettings);
 
@@ -187,7 +194,10 @@ void UC_InventoryGameInstance::MyFindSession()
 		/*Search Settings (Match Create Session Settings)*/
 		SearchSession = MakeShareable(new FOnlineSessionSearch());
 
-		 //Is LAN
+		///*TEST*/
+		//SearchSession->bIsLanQuery = true;
+
+		// Is LAN
 		SearchSession->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() != "NULL" ? false : true;
 		SearchSession->MaxSearchResults = 10000;
 		SearchSession->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
