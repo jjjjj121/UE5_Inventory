@@ -385,7 +385,7 @@ void AC_InventoryCharacter::AddItemAndUpdateInventory_Implementation(FItemData I
 
 		/*ItemÀÏ °æ¿ì*/
 		if (HUDWidget->W_Inventory->IsNewItem(NewInventoryItems)) {
-			
+
 			HUDWidget->W_Inventory->AddItem(ItemData);
 		}
 		else {
@@ -665,33 +665,45 @@ void AC_InventoryCharacter::UpdateShop_Implementation(const TArray<FItemData>& I
 
 
 
-void AC_InventoryCharacter::OnTrade(AC_InventoryCharacter* TradeUser)
+void AC_InventoryCharacter::OnTrade()
 {
-
 	if (HasAuthority()) {
-		TradeCharacter = TradeUser;
-		SetRunningTrade(true);
-		if (IsLocallyControlled()) {
-			HUDWidget->OnTrade(TradeUser);
-		}
-		else {
-			Client_OnTrade(TradeUser);
-		}
+		Multi_OnTrade(TradeCharacter);
 	}
 	else {
-		if (IsLocallyControlled()) {
-			HUDWidget->OnTrade(TradeUser);
-			SetRunningTrade(true);
-		}
+		Server_OnTrade(TradeCharacter);
 	}
 
 }
 
-void AC_InventoryCharacter::Client_OnTrade_Implementation(AC_InventoryCharacter* TradeUser)
+void AC_InventoryCharacter::UserOnTrade()
 {
-	OnTrade(TradeUser);
+	if (HasAuthority()) {
+		TradeCharacter->OnTrade();
+	}
+	else {
+		Server_UserOnTrade(TradeCharacter);
+	}
 }
 
+void AC_InventoryCharacter::Server_OnTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	Multi_OnTrade(TradeUser);
+}
+
+void AC_InventoryCharacter::Multi_OnTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	if (IsLocallyControlled()) {
+		//TradeCharacter = TradeUser;
+		SetRunningTrade(true);
+		HUDWidget->OnTrade(TradeCharacter);
+	}
+}
+
+void AC_InventoryCharacter::Server_UserOnTrade_Implementation(AC_InventoryCharacter* TradeUser)
+{
+	TradeCharacter->OnTrade();
+}
 
 
 void AC_InventoryCharacter::EndTrade()
@@ -818,7 +830,7 @@ void AC_InventoryCharacter::UserSetAcceptTrade()
 	}
 	else {
 		Server_UserSetAcceptTrade(HUDWidget->TradeCharacter);
-	}	
+	}
 }
 
 
@@ -955,8 +967,10 @@ void AC_InventoryCharacter::TryTrade(AC_InventoryCharacter* Character)
 	TradeCharacter = Character;
 
 	if (WantTrade && TradeCharacter->WantTrade) {
-		OnTrade(TradeCharacter);
-		TradeCharacter->OnTrade(this);
+
+		OnTrade();
+		UserOnTrade();
+		//TradeCharacter->OnTrade(this);
 	}
 	else {
 		if (HasAuthority()) {

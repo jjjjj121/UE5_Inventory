@@ -156,7 +156,7 @@ void UTradeWidget::ResetWidget()
 	UpdateGold(0, true);
 	UpdateGold(0, false);
 
-	TB_User->SetText(FText::FromString(FString::Printf(TEXT("User"))));
+	//TB_User->SetText(FText::FromString(FString::Printf(TEXT("User"))));
 
 	My_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
 	User_AcceptEffect->SetVisibility(ESlateVisibility::Collapsed);
@@ -167,7 +167,8 @@ void UTradeWidget::ResetWidget()
 void UTradeWidget::SetUserName()
 {
 	if (AC_InventoryCharacter* Character = Cast<AC_InventoryCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))) {
-		TB_User->SetText(FText::FromString(Character->TradeCharacter->Nickname));
+		FString Name = Character->TradeCharacter->Nickname;
+		TB_User->SetText(FText::FromString(Name));
 	}
 }
 

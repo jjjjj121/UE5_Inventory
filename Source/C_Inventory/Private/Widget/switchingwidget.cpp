@@ -96,7 +96,7 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);
 	W_NotificationTrade->InitWidget();
 
-	W_TradeWidget->SetUserName();
+	//W_TradeWidget->SetUserName();
 	W_TradeWidget->SetVisibility(ESlateVisibility::Visible);
 
 	SwitchingUI(true);
@@ -105,8 +105,6 @@ void Uswitchingwidget::OnTrade(AC_InventoryCharacter* TradeUser)
 
 void Uswitchingwidget::EndTrade()
 {
-	
-	//TradeCharacter = nullptr;
 	W_TradeWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	W_NotificationTrade->SetVisibility(ESlateVisibility::Collapsed);

@@ -179,7 +179,9 @@ public:
 	void TryTrade();
 	void TryTrade(AC_InventoryCharacter* Character);
 	void UserTryTrade();
-	void OnTrade(AC_InventoryCharacter* TradeUser);
+
+	void OnTrade();
+	void UserOnTrade();
 
 	void EndTrade();
 	void EndTrade(TArray<FItemData> SucceedTradeItems);
@@ -217,8 +219,14 @@ public:
 	UFUNCTION(Server, Reliable)
 		void Server_SetRunningTrade(bool NewValue);
 
-	UFUNCTION(Client, Reliable)
-		void Client_OnTrade(AC_InventoryCharacter* TradeUser);
+	UFUNCTION(Server, Reliable)
+		void Server_OnTrade(AC_InventoryCharacter* TradeUser);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multi_OnTrade(AC_InventoryCharacter* TradeUser);
+
+	UFUNCTION(Server, Reliable)
+		void Server_UserOnTrade(AC_InventoryCharacter* TradeUser);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void Multicast_EndTrade();
