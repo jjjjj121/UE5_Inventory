@@ -206,7 +206,7 @@ void AC_InventoryCharacter::AddInventoryItem(FItemData ItemData, bool IsInventor
 		}
 	}
 	else {
-		Server_AddInventoryItem(ItemData, IsInventoryItem);
+		//Server_AddInventoryItem(ItemData, IsInventoryItem);
 	}
 
 }
@@ -851,11 +851,20 @@ void AC_InventoryCharacter::SucceedTrade()
 void AC_InventoryCharacter::Multicast_SucceedTrade_Implementation()
 {
 	if (IsLocallyControlled()) {
-		SucceedTrade(HUDWidget->W_TradeWidget->GetTradeData(false));
+		TArray<FItemData> SucceedTradeItems = HUDWidget->W_TradeWidget->GetTradeData(false);
+		SucceedTrade(SucceedTradeItems);
+		//TArray<FItemData> SucceedTradeItems = HUDWidget->W_TradeWidget->GetTradeData(false);
+		//for (FItemData NewItem : SucceedTradeItems) {
+		//	AddInventoryItem(NewItem, true);
+		//}
+		///*Setting Reset*/
+		//SetWantTrade(false);
+		//SetRunningTrade(false);
+		//HUDWidget->EndTrade();
 	}
 }
 
-void AC_InventoryCharacter::SucceedTrade(TArray<FItemData> SucceedTradeItems)
+void AC_InventoryCharacter::SucceedTrade(const TArray<FItemData>& SucceedTradeItems)
 {
 	for (FItemData NewItem : SucceedTradeItems) {
 		AddInventoryItem(NewItem, true);
@@ -870,10 +879,12 @@ void AC_InventoryCharacter::SucceedTrade(TArray<FItemData> SucceedTradeItems)
 void AC_InventoryCharacter::UserSucceedTrade()
 {
 	if (HasAuthority()) {
-		HUDWidget->TradeCharacter->SucceedTrade();
+		if (TradeCharacter) {
+			TradeCharacter->SucceedTrade();
+		}
 	}
 	else {
-		Server_UserSucceedTrade(HUDWidget->TradeCharacter);
+		Server_UserSucceedTrade(TradeCharacter);
 	}
 
 }

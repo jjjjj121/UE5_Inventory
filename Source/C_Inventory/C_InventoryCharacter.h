@@ -176,7 +176,6 @@ public:
 
 	void UpdateGold(int32 GoldValue, bool IsMyGold);
 
-	void TryTrade();
 	void TryTrade(AC_InventoryCharacter* Character);
 	void UserTryTrade();
 
@@ -197,7 +196,7 @@ public:
 	void UserSetAcceptTrade();
 
 	void SucceedTrade();
-	void SucceedTrade(TArray<FItemData> SucceedTradeItems);
+	void SucceedTrade(const TArray<FItemData>& SucceedTradeItems);
 	void UserSucceedTrade();
 
 	void TradeReset();
